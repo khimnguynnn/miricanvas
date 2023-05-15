@@ -3,6 +3,9 @@ from time import sleep
 import random
 from selenium.webdriver.common.by import By
 from proxy_ext import proxies
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 def openChrome(userLogin, passwordLogin, proxy):
     options = webdriver.ChromeOptions()
@@ -53,3 +56,15 @@ def getCookies(driver):
         name = cookie['name']
         value = cookie['value']
         cookie_string  += f"{name}={value}; "
+
+
+def UploadtoMiris(driver, path):
+    try:
+        WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Select File or Folder']")))
+        sleep(2)
+        driver.find_element(By.XPATH, "//input[@type='file']").send_keys(path)
+        WebDriverWait(driver, 999).until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Next']")))
+        sleep(2)
+        return True
+    except:
+        return False

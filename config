@@ -1,1 +1,9 @@
-[{"email": "khimnguynn@gmail.com", "password": "0708Khiem!", "IP": "103.171.113.71:28714:khimnguynn:cCDKOVHb", "approve": 0, "pending": 0}]
+[
+    {
+        "email": "khimnguynn@gmail.com",
+        "password": "0708Khiem!",
+        "IP": "103.171.113.71:28714:khimnguynn:cCDKOVHb",
+        "approve": 0,
+        "pending": 0
+    }
+]

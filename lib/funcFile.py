@@ -43,3 +43,11 @@ def hashtagList(name, filename):
     hashtag.insert(0, name)
 
     return hashtag
+
+
+def plusImages(folder, images):
+    p = Path(ImagesPath().replace("lib/", ""))
+    path = ''
+    for item in images:
+        path += fr"{p}/{folder}/{item}" + ' \n '
+    return path.strip()

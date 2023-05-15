@@ -7,6 +7,9 @@ import sys
 sys.path.append('./lib')
 from lib.seleniumFunc import *
 from lib.funcFile import *
+from lib.miricanvasFunc import *
+from time import sleep
+
 
 class MiriCanvas(Tk):
     def __init__(self):
@@ -199,16 +202,29 @@ class MiriCanvas(Tk):
             email = child[0]
             passwd = child[1]
             prx = child[2]
-            # driver = openChrome(email, passwd, prx)
+            driver = openChrome(email, passwd, prx)
             folderEle = random.choice(getImageFolders())
-            print(folderEle)
+            elements, hashtag = getItemsInFolder(folderEle)
+            if hashtag == None:
+                # thoobg baso log o day
+                continue
+            cookie = getCookies(driver)
+            memId = getMemId(cookie)
 
+            string_Path = plusImages(folderEle, elements)
+            sleep(1)
+            driver.get("https://designhub.miricanvas.com/element/upload")
+            batch_size = 50
+            for i in range(0, eleCounts, batch_size):
+                try:
+                    for j in range(i+batch_size):
+                        if UploadtoMiris(string_Path):
+                            eleid, name = getElementsID(cookie, memId)
+                except:
+                    pass
+                
 
             self.startButton["state"] = "enabled"
-
-            
-        
-
 if __name__ == "__main__":
     app = MiriCanvas()
     app.title("Auto Control MiriCanvas")
