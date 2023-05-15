@@ -56,6 +56,7 @@ def getCookies(driver):
         name = cookie['name']
         value = cookie['value']
         cookie_string  += f"{name}={value}; "
+    return cookie_string
 
 
 def UploadtoMiris(driver, path):

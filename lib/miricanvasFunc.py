@@ -37,7 +37,12 @@ def getElementsID(cookie, memId):
     for i in res["data"]["content"]:
 
         eleID.append(i["id"])
-        name.append(i["name"].split("-")[0])
+        nameSplited = i["name"].split("-")
+        if len(nameSplited) > 2:
+            concatenated_name = ' '.join(nameSplited[1:])
+            name.append(concatenated_name.replace(".svg", ""))
+        else:
+            name.append(i["name"].split("-")[1].split(".")[0])
     return eleID, name
 
 def submitItem(cookie, eleId, name, hashtag):

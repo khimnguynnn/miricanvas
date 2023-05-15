@@ -6,7 +6,7 @@ import random
 current_path = os.path.dirname(os.path.abspath(__file__))
 
 def ImagesPath():
-    return current_path + "/Images"
+    return current_path + "\\Images"
 
 def timeInfor():
     now = datetime.now()
@@ -15,7 +15,7 @@ def timeInfor():
 
 def getImageFolders():
     FolderName = []
-    p = Path(ImagesPath().replace("lib/", ""))
+    p = Path(ImagesPath().replace("lib\\", ""))
     subdirectories = [x for x in p.iterdir() if x.is_dir()]
     for directory in subdirectories:
         FolderName.append(directory.name)
@@ -24,7 +24,7 @@ def getImageFolders():
 def getItemsInFolder(folder):
     svgFile = []
     hashtag = None
-    folder_path = Path(f'{ImagesPath().replace("lib/", "")}/{folder}')
+    folder_path = Path(ImagesPath().replace("lib\\", "") + "\\" + folder)
     for item in folder_path.iterdir():
         if item.name.__contains__(".svg"):
             svgFile.append(item.name)
@@ -37,7 +37,7 @@ def getItemsInFolder(folder):
 
 def hashtagList(name, folder, filename):
     name = name.lower()
-    p = Path(ImagesPath().replace("lib/", "") + f"/{folder}/{filename}")
+    p = Path(ImagesPath().replace("lib\\", "") + f"\\{folder}\\{filename}")
     with open(p, "r") as f:
         words = f.read().split(",")
 
@@ -48,8 +48,14 @@ def hashtagList(name, folder, filename):
 
 
 def plusImages(folder, images):
-    p = Path(ImagesPath().replace("lib/", ""))
+    p = current_path.replace("\\", "/").replace("lib", "Images")
+
     path = ''
     for item in images:
         path += fr"{p}/{folder}/{item}" + ' \n '
     return path.strip()
+
+def MoveImage(folder, file):
+    Path(f"./Uploaded/{folder}").mkdir(parents=True, exist_ok=True)
+    os.system(f"mv ./Images/{folder}/{file} ./Uploaded/{folder}/{file}")
+

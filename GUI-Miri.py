@@ -8,6 +8,7 @@ sys.path.append('./lib')
 from lib.seleniumFunc import *
 from lib.funcFile import *
 from lib.miricanvasFunc import *
+from lib.logger import *
 from time import sleep
 
 
@@ -65,7 +66,7 @@ class MiriCanvas(Tk):
         self.frame_log.grid(row=0, column=0, padx=5, pady=5)
         self.scrollbar = Scrollbar(self.frame_log)
         self.scrollbar.grid(row=0, column=1, sticky="ns")
-        self.logbox = Listbox(self.frame_log, height=12, width=80, yscrollcommand=self.scrollbar.set)
+        self.logbox = Listbox(self.frame_log, height=12, width=117, yscrollcommand=self.scrollbar.set)
         self.logbox.grid(row=0, column=0, sticky="nsew")
         self.scrollbar.config( command = self.logbox.yview )
         
@@ -74,7 +75,7 @@ class MiriCanvas(Tk):
         self.tree.bind('<Return>', self.edit_item)
         self.tree.bind("<Delete>", lambda event: self.delete_item())
         self.edit_ip_entry = None
-
+        
     def add_config(self):
     # Tạo hộp thoại để nhập thông tin cấu hình
         add_window = Toplevel(self)
@@ -153,7 +154,7 @@ class MiriCanvas(Tk):
             x, y, width, height = self.tree.bbox(cur_item, "ip")
             self.edit_ip_entry = Entry(self.tree, width=width, justify='center')
             self.edit_ip_entry.place(x=x, y=y, width=width, height=height)
-            self.edit_ip_entry.insert(0, item_data[1])
+            self.edit_ip_entry.insert(0, item_data[2])
             self.edit_ip_entry.focus()
             self.edit_ip_entry.bind("<Return>", lambda event: self.update_ip(cur_item))
 
@@ -178,6 +179,7 @@ class MiriCanvas(Tk):
             })
         with open("config", "w") as f:
             json.dump(data, f)
+
     def GetChildren(self):
         children = []
         for item in self.tree.get_children():
@@ -187,6 +189,7 @@ class MiriCanvas(Tk):
 
     #---------------------------------------------------------------------------------------------------#
     def startThread(self):
+        insertLog(self.logbox, "Application started")
         self.startButton["state"] = "disabled"
         try:
             eleCounts = int(self.entry_elements.get())
@@ -202,35 +205,60 @@ class MiriCanvas(Tk):
             email = child[0]
             passwd = child[1]
             prx = child[2]
+            insertLog(self.logbox, f"Currently Logged Account {email}")
             driver = openChrome(email, passwd, prx)
-            folderEle = random.choice(getImageFolders())
-            elements, hashtag = getItemsInFolder(folderEle)
-            if hashtag == None:
-                # thoobg baso log o day
-                continue
-            cookie = getCookies(driver)
-            memId = getMemId(cookie)
-
-            string_Path = plusImages(folderEle, elements)
-            sleep(1)
-            driver.get("https://designhub.miricanvas.com/element/upload")
-            batch_size = 50
-            for i in range(0, eleCounts, batch_size):
-                try:
-                    for j in range(i+batch_size):
-                        if UploadtoMiris(string_Path):
-                            eleid, name = getElementsID(cookie, memId)
-                            for index, ele in enumerate(eleid):
-                                arrHashtag = hashtagList(name[index], folderEle, hashtag)
-                                if submitItem(cookie, ele, name[i], arrHashtag):
-                                    print(f"{timeInfor()} --> success upload element -> {name[i]}.svg")
-                                else:
-                                    print(f"{timeInfor()} --> failed upload element -> {name[i]}.svg")
-                except:
-                    pass
+            while 1:
+                folderEle = random.choice(getImageFolders())
+                insertLog(self.logbox, f"Folder Selected {folderEle}")
+                elements, hashtag = getItemsInFolder(folderEle)
+                insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
+                break_count = 0
+                if hashtag is not None:
+                    insertLog(self.logbox, f"Found Hashtag in folder {folderEle} -- > {hashtag}")
+                    break
+                if break_count == 5:
+                    return
+                if hashtag == None:
+                    break_count += 1
+                    insertLog(self.logbox, f"Folder Not Have Hashtag {folderEle} --> Skip")
+                    # thoobg baso log o day
+                    continue
                 
-
+            sleep(1)
+            resetCounts = 0
+            batch_size = 50
+            if eleCounts < batch_size:
+                batch_size = eleCounts
+            cookie = getCookies(driver)
+            insertLog(self.logbox, f"Got cookie for requesting {cookie}")
+            memId = getMemId(cookie)
+            insertLog(self.logbox, f"Got Member ID for requesting {memId}")
+            for i in range(0, eleCounts, batch_size):
+                if int(self.entry_elements.get()) - resetCounts <= batch_size:
+                    batch_size = int(self.entry_elements.get()) - resetCounts
+                driver.get("https://designhub.miricanvas.com/element/upload")
+                sleep(3)
+                insertLog(self.logbox, f"Redirect to Upload Dashboard")
+                eleToPlus = []
+                for j in range(i, i+batch_size):
+                    eleToPlus.append(elements[j])
+                
+                string_Path = plusImages(folderEle, eleToPlus)
+                insertLog(self.logbox, f"Started Upload Pack {folderEle}")
+                if UploadtoMiris(driver, string_Path):
+                    eleid, name = getElementsID(cookie, memId)
+                    for index, ele in enumerate(eleid):
+                        arrHashtag = hashtagList(name[index], folderEle, hashtag)
+                        if submitItem(cookie, ele, name[index], arrHashtag):
+                            resetCounts += 1
+                            insertLog(self.logbox, f"success upload element -> {name[index]}.svg")
+                        else:
+                            insertLog(self.logbox, f"failed upload element -> {name[index]}.svg")
+                for ele in eleToPlus:
+                    MoveImage(folderEle, ele)
+            driver.quit()
             self.startButton["state"] = "enabled"
+            insertLog(self.logbox, "All Done")
 if __name__ == "__main__":
     app = MiriCanvas()
     app.title("Auto Control MiriCanvas")
