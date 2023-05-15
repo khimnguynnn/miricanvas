@@ -35,8 +35,10 @@ def getItemsInFolder(folder):
             pass
     return svgFile, hashtag
 
-def hashtagList(name, filename):
-    with open(filename, "r") as f:
+def hashtagList(name, folder, filename):
+    name = name.lower()
+    p = Path(ImagesPath().replace("lib/", "") + f"/{folder}/{filename}")
+    with open(p, "r") as f:
         words = f.read().split(",")
 
     hashtag = random.sample(words, k=24)

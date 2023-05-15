@@ -220,6 +220,12 @@ class MiriCanvas(Tk):
                     for j in range(i+batch_size):
                         if UploadtoMiris(string_Path):
                             eleid, name = getElementsID(cookie, memId)
+                            for index, ele in enumerate(eleid):
+                                arrHashtag = hashtagList(name[index], folderEle, hashtag)
+                                if submitItem(cookie, ele, name[i], arrHashtag):
+                                    print(f"{timeInfor()} --> success upload element -> {name[i]}.svg")
+                                else:
+                                    print(f"{timeInfor()} --> failed upload element -> {name[i]}.svg")
                 except:
                     pass
                 
