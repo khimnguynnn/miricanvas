@@ -60,6 +60,7 @@ class MiriCanvas(Tk):
         self.label_count.grid(row=5, column=0)
         self.entry_elements = ttk.Entry(self.group_func, width=12)
         self.entry_elements.grid(row=6, column=0)
+        self.entry_elements.insert(0, 500)
 
         #textbox for logging
         self.frame_log = Frame(log)
@@ -257,8 +258,8 @@ class MiriCanvas(Tk):
                 for ele in eleToPlus:
                     MoveImage(folderEle, ele)
             driver.quit()
-            self.startButton["state"] = "enabled"
-            insertLog(self.logbox, "All Done")
+        self.startButton["state"] = "enabled"
+        insertLog(self.logbox, "All Done")
 if __name__ == "__main__":
     app = MiriCanvas()
     app.title("Auto Control MiriCanvas")
