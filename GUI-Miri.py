@@ -3,8 +3,10 @@ from tkinter import ttk
 from tkinter import messagebox
 import json
 import threading
-from funcFile import *
-from seleniumFunc import *
+import sys
+sys.path.append('./lib')
+from lib.seleniumFunc import *
+from lib.funcFile import *
 
 class MiriCanvas(Tk):
     def __init__(self):
@@ -16,12 +18,12 @@ class MiriCanvas(Tk):
         tab_control.add(main, text='Main')
         tab_control.add(log, text='Log')
         tab_control.grid(row=0)
+
         # frame
         self.group = Frame(main, padx=5, pady=5)
         self.group.grid(row=0, column=0, padx=10, pady=10)
 
         # Treview
-
         s = ttk.Style()
         s.theme_use('clam')
         s.configure('Treeview.Heading', background="#0099CC")
@@ -197,9 +199,14 @@ class MiriCanvas(Tk):
             email = child[0]
             passwd = child[1]
             prx = child[2]
-            driver = openChrome(email, passwd, prx)
-            driver.get("https://designhub.miricanvas.com/element/manage")
-            break
+            # driver = openChrome(email, passwd, prx)
+            folderEle = random.choice(getImageFolders())
+            print(folderEle)
+
+
+            self.startButton["state"] = "enabled"
+
+            
         
 
 if __name__ == "__main__":
