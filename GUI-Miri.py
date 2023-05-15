@@ -1,8 +1,10 @@
 from tkinter import *
 from tkinter import ttk
-import json
 from tkinter import messagebox
-
+import json
+import threading
+from funcFile import *
+from seleniumFunc import *
 
 class MiriCanvas(Tk):
     def __init__(self):
@@ -31,23 +33,38 @@ class MiriCanvas(Tk):
         self.tree.heading("password", text="Password")
         self.tree.column("password", width=90, anchor='center')
         self.tree.heading("ip", text="IP")
-        self.tree.column("ip", width=120, anchor='center')
+        self.tree.column("ip", width=135, anchor='center')
         self.tree.heading("approve", text="Approved")
         self.tree.column("approve", width=70, anchor='center')
         self.tree.heading("pending", text="Pending")
         self.tree.column("pending", width=70, anchor='center')
 
-        # group function
-        self.group_func = LabelFrame(main, padx=5, pady=5)
-        self.group_func.grid(row=0, column=1, padx=10, pady=10)
-
+        # group control account
+        self.group_func = LabelFrame(main, text="Main Control", padx=12, pady=5)
+        self.group_func.grid(row=0, column=1, padx=1, pady=10, rowspan=2, sticky=N)
         self.add_button = ttk.Button(self.group_func, text="Add", command=self.add_config)
         self.add_button.grid(row=1, column=0, columnspan=5, pady=5)
-
         self.del_button = ttk.Button(self.group_func, text="Delete", command=self.delete_item)
         self.del_button.grid(row=2, column=0, columnspan=5, pady=5)
+        
+        # group main
+        self.startButton = ttk.Button(self.group_func, text="Start", command=self.startThread)
+        self.startButton.grid(row=4, column=0, pady=5)
+        self.label_count = Label(self.group_func, text="Elements per Acc")
+        self.label_count.grid(row=5, column=0)
+        self.entry_elements = ttk.Entry(self.group_func, width=12)
+        self.entry_elements.grid(row=6, column=0)
 
-
+        #textbox for logging
+        self.frame_log = Frame(log)
+        self.frame_log.grid(row=0, column=0, padx=5, pady=5)
+        self.scrollbar = Scrollbar(self.frame_log)
+        self.scrollbar.grid(row=0, column=1, sticky="ns")
+        self.logbox = Listbox(self.frame_log, height=12, width=80, yscrollcommand=self.scrollbar.set)
+        self.logbox.grid(row=0, column=0, sticky="nsew")
+        self.scrollbar.config( command = self.logbox.yview )
+        
+        #catch handle and load config
         self.LoadConfig()
         self.tree.bind('<Return>', self.edit_item)
         self.tree.bind("<Delete>", lambda event: self.delete_item())
@@ -74,6 +91,8 @@ class MiriCanvas(Tk):
 
 
     def saveAccount(self, email, password, ip, window):
+        if ip == "":
+            ip = None
         with open('config', 'r+') as f:
             data = json.load(f)
             data.append({
@@ -154,39 +173,37 @@ class MiriCanvas(Tk):
             })
         with open("config", "w") as f:
             json.dump(data, f)
+    def GetChildren(self):
+        children = []
+        for item in self.tree.get_children():
+            values = self.tree.item(item, 'values')
+            children.append(values)
+        return children
 
+    #---------------------------------------------------------------------------------------------------#
+    def startThread(self):
+        self.startButton["state"] = "disabled"
+        try:
+            eleCounts = int(self.entry_elements.get())
+        except:
+            messagebox.showerror("Error", "Element Count not Input yet")
+            self.startButton["state"] = "enabled"
+            return
+        newThread = threading.Thread(target=self.MainUpload, args=(eleCounts, ))
+        newThread.start()
 
+    def MainUpload(self, eleCounts: int):
+        for child in self.GetChildren():
+            email = child[0]
+            passwd = child[1]
+            prx = child[2]
+            driver = openChrome(email, passwd, prx)
+            driver.get("https://designhub.miricanvas.com/element/manage")
+            break
+        
 
 if __name__ == "__main__":
     app = MiriCanvas()
     app.title("Auto Control MiriCanvas")
+    app.resizable(width=False, height=False)
     app.mainloop()
-
-
-
-# import tkinter as tk
-# from tkinter import ttk
-
-# # root window
-# root = tk.Tk()
-# root.geometry('400x300')
-# root.title('Notebook Demo')
-
-# # create a notebook
-# notebook = ttk.Notebook(root)
-# notebook.pack(pady=10, expand=True)
-
-# # create frames
-# frame1 = ttk.Frame(notebook, width=400, height=280)
-# frame2 = ttk.Frame(notebook, width=400, height=280)
-
-# frame1.pack(fill='both', expand=True)
-# frame2.pack(fill='both', expand=True)
-
-# # add frames to notebook
-
-# notebook.add(frame1, text='General Information')
-# notebook.add(frame2, text='Profile')
-
-
-# root.mainloop()
