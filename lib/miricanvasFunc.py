@@ -35,14 +35,16 @@ def getElementsID(cookie, memId):
     
     res = ses.get(url).json()
     for i in res["data"]["content"]:
-
-        eleID.append(i["id"])
-        nameSplited = i["name"].split("-")
-        if len(nameSplited) > 2:
-            concatenated_name = ' '.join(nameSplited[1:])
-            name.append(concatenated_name.replace(".svg", ""))
-        else:
-            name.append(i["name"].split("-")[1].split(".")[0])
+        try:
+            eleID.append(i["id"])
+            nameSplited = i["name"].split("-")
+            if len(nameSplited) > 2:
+                concatenated_name = ' '.join(nameSplited[1:])
+                name.append(concatenated_name.replace(".svg", ""))
+            else:
+                name.append(i["name"].split("-")[1].split(".")[0])
+        except:
+            print(i["name"])
     return eleID, name
 
 def submitItem(cookie, eleId, name, hashtag):

@@ -7,6 +7,7 @@ Images/
 # C extensions
 Uploaded
 *.so
+miricanvasUpload.py
 proxies_extension.zip
 # Distribution / packaging
 .Python
