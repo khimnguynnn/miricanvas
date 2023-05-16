@@ -33,17 +33,19 @@ class MiriCanvas(Tk):
         s.configure('Treeview.Heading', background="#0099CC")
         self.tree = ttk.Treeview(self.group, show='headings', height=8)
         self.tree.pack()
-        self.tree["columns"] = ("email","password", "ip", "approve", "pending")
+        self.tree["columns"] = ("email","password", "ip", "approve", "pending", "balance")
         self.tree.heading("email", text="Email")
         self.tree.column("email", anchor='center')
         self.tree.heading("password", text="Password")
         self.tree.column("password", width=90, anchor='center')
         self.tree.heading("ip", text="IP")
-        self.tree.column("ip", width=135, anchor='center')
+        self.tree.column("ip", width=120, anchor='center')
         self.tree.heading("approve", text="Approved")
-        self.tree.column("approve", width=70, anchor='center')
+        self.tree.column("approve", width=50, anchor='center')
         self.tree.heading("pending", text="Pending")
-        self.tree.column("pending", width=70, anchor='center')
+        self.tree.column("pending", width=50, anchor='center')
+        self.tree.heading("balance", text="Balance (KRW)")
+        self.tree.column("balance", width=90, anchor='center')
 
         # group control account
         self.group_func = LabelFrame(main, text="Main Control", padx=12, pady=5)
@@ -107,7 +109,8 @@ class MiriCanvas(Tk):
                 "password": password,
                 "IP": ip,
                 "approve": 0,
-                "pending": 0
+                "pending": 0,
+                "balance": 0
             })
             f.seek(0)
             json.dump(data, f, indent=4)
@@ -127,7 +130,8 @@ class MiriCanvas(Tk):
                 ipaddress = item.get("IP")
                 approve = item.get("approve")
                 pending = item.get("pending")
-                self.tree.insert("", "end", values=(email, password, ipaddress, approve, pending))
+                balance = item.get("balance")
+                self.tree.insert("", "end", values=(email, password, ipaddress, approve, pending, balance))
         # self.save_config()
 
     def delete_item(self):
@@ -170,40 +174,46 @@ class MiriCanvas(Tk):
         data = []
         for item in self.tree.get_children():
             values = self.tree.item(item)["values"]
-            email, password, ip, approve, pending = values
+            email, password, ip, approve, pending, balance = values
             data.append({
                 "email": email,
                 "password": password,
                 "IP": ip,
                 "approve": approve,
-                "pending": pending
+                "pending": pending,
+                "balance": balance
             })
         with open("config", "w") as f:
             json.dump(data, f)
 
-    def GetChildren(self, ItemInput=None):
+    def GetChildren(self):
         children = []
         items = []
-        if ItemInput is None:
-            for item in self.tree.get_children():
+
+        selected_items = self.tree.selection()
+
+        if selected_items:
+
+            for item in selected_items:
+
                 values = self.tree.item(item, 'values')
                 children.append(values)
                 items.append(item)
         else:
-            for item in ItemInput:
+
+            for item in self.tree.get_children():
+
                 values = self.tree.item(item, 'values')
                 children.append(values)
                 items.append(item)
+
         return children, items
 
-    def update_columns(self, child, approved, pending):
-     
-        new_column_2_value = approved
-        new_column_3_value = pending
-        
-        # Cập nhật giá trị đã chỉnh sửa vào cây dữ liệu (treeview)
-        self.tree.set(child, "#4", new_column_2_value)
-        self.tree.set(child, "#5", new_column_3_value)
+    def update_columns(self, child, approved, pending, balance):
+
+        self.tree.set(child, "#4", approved)
+        self.tree.set(child, "#5", pending)
+        self.tree.set(child, "#6", balance)
         self.save_config()
 
     #---------------------------------------------------------------------------------------------------#
@@ -223,15 +233,10 @@ class MiriCanvas(Tk):
         newThread.start()
 
     def MainUpload(self, eleCounts: int):
-        selected_items = self.tree.selection()
 
-        if selected_items:
-                childs, items = self.GetChildren(selected_items)
-   
-        else:
-            childs, items = self.GetChildren()
+        childs, items = self.GetChildren()
 
-        for index, child in enumerate(childs):
+        for indexx, child in enumerate(childs):
             email = child[0]
             passwd = child[1]
             prx = child[2]
@@ -243,11 +248,6 @@ class MiriCanvas(Tk):
             memId = getMemId(cookie)
             insertLog(self.logbox, f"Got Member ID for requesting {memId}")
 
-            pendingEle = PendingElements(cookie, memId)
-            insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
-            approvedEle = ApprovedElements(cookie, memId)
-            insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
-            self.update_columns(items[index], approvedEle, pendingEle)
             
             break_count = 0
             while True:
@@ -319,6 +319,13 @@ class MiriCanvas(Tk):
                             
                 for ele in eleToPlus:
                     MoveImage(folderEle, ele)
+            pendingEle = PendingElements(cookie, memId)
+            insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
+            approvedEle = ApprovedElements(cookie, memId)
+            insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
+            balance = checkBalance(cookie, memId)
+            insertLog(self.logbox, f"Account {email} Balance {balance}")
+            self.update_columns(items[indexx], approvedEle, pendingEle, balance)
             driver.quit()
         self.startButton["state"] = "enabled"
         insertLog(self.logbox, "All Done")
