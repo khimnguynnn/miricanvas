@@ -371,4 +371,5 @@ if __name__ == "__main__":
     app = MiriCanvas()
     app.title("Auto Control MiriCanvas")
     app.resizable(width=False, height=False)
+    app.iconbitmap("icon.ico")
     app.mainloop()
