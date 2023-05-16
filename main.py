@@ -33,50 +33,60 @@ class MiriCanvas(Tk):
         s.configure('Treeview.Heading', background="#0099CC")
         self.tree = ttk.Treeview(self.group, show='headings', height=8)
         self.tree.pack()
-        self.tree["columns"] = ("email","password", "ip", "approve", "pending")
+        self.tree["columns"] = ("email","password", "ip", "approve", "pending", "balance")
         self.tree.heading("email", text="Email")
         self.tree.column("email", anchor='center')
         self.tree.heading("password", text="Password")
         self.tree.column("password", width=90, anchor='center')
         self.tree.heading("ip", text="IP")
-        self.tree.column("ip", width=135, anchor='center')
+        self.tree.column("ip", width=145, anchor='center')
         self.tree.heading("approve", text="Approved")
-        self.tree.column("approve", width=70, anchor='center')
+        self.tree.column("approve", width=80, anchor='center')
         self.tree.heading("pending", text="Pending")
-        self.tree.column("pending", width=70, anchor='center')
+        self.tree.column("pending", width=85, anchor='center')
+        self.tree.heading("balance", text="Balance (KRW)")
+        self.tree.column("balance", width=100, anchor='center')
 
         # group control account
-        self.group_func = LabelFrame(main, text="Main Control", padx=12, pady=5)
-        self.group_func.grid(row=0, column=1, padx=1, pady=10, rowspan=2, sticky=N)
+        self.group_func = LabelFrame(main, text="Main Control", padx=42, pady=5)
+        self.group_func.grid(row=1, column=0, rowspan=2, columnspan=2)
         self.add_button = ttk.Button(self.group_func, text="Add", command=self.add_config)
-        self.add_button.grid(row=1, column=0, columnspan=5, pady=5)
+        self.add_button.grid(row=0, column=0, pady=5, padx=5, sticky=W)
         self.del_button = ttk.Button(self.group_func, text="Delete", command=self.delete_item)
-        self.del_button.grid(row=2, column=0, columnspan=5, pady=5)
+        self.del_button.grid(row=0, column=1, pady=5, padx=5, sticky=W)
         
         # group main
         self.startButton = ttk.Button(self.group_func, text="Start", command=self.startThread)
-        self.startButton.grid(row=4, column=0, pady=5)
+        self.startButton.grid(row=0, column=3, pady=5, padx=5)
+        self.stopButton = ttk.Button(self.group_func, text="Stop", command=lambda: messagebox.showinfo("Notify", "Feature Not Finished Yet"))
+        self.stopButton.grid(row=0, column=4, pady=5, padx=5)
         self.label_count = Label(self.group_func, text="Elements per Acc")
-        self.label_count.grid(row=5, column=0)
-        self.entry_elements = ttk.Entry(self.group_func, width=12)
-        self.entry_elements.grid(row=6, column=0)
+        self.label_count.grid(row=0, column=7, rowspan=2, sticky=N)
+        self.entry_elements = ttk.Entry(self.group_func, width=14)
+        self.entry_elements.grid(row=0, column=7, rowspan=2, sticky=S)
         self.entry_elements.insert(0, 500)
+
+        self.openButton = ttk.Button(self.group_func, text="Open Profile", command=self.threadOpenProfile)
+        self.openButton.grid(row=0, column=5, pady=5, padx=5)
+        self.checkbox_var = IntVar()
+        self.checkbox = ttk.Checkbutton(self.group_func, text="Loop", variable=self.checkbox_var)
+        self.checkbox.grid(row=0, column=6, pady=10, padx=10, sticky=E)
 
         #textbox for logging
         self.frame_log = Frame(log)
         self.frame_log.grid(row=0, column=0, padx=5, pady=5)
         self.scrollbar = Scrollbar(self.frame_log)
         self.scrollbar.grid(row=0, column=1, sticky="ns")
-        self.logbox = Listbox(self.frame_log, height=12, width=117, yscrollcommand=self.scrollbar.set)
+        self.logbox = Listbox(self.frame_log, height=18, width=117, yscrollcommand=self.scrollbar.set)
         self.logbox.grid(row=0, column=0, sticky="nsew")
-        self.scrollbar.config( command = self.logbox.yview )
+        self.scrollbar.config( command = self.logbox.yview)
         
         #catch handle and load config
         self.LoadConfig()
         self.tree.bind('<Return>', self.edit_item)
         self.tree.bind("<Delete>", lambda event: self.delete_item())
         self.edit_ip_entry = None
-        
+
     def add_config(self):
     # Tạo hộp thoại để nhập thông tin cấu hình
         add_window = Toplevel(self)
@@ -107,7 +117,8 @@ class MiriCanvas(Tk):
                 "password": password,
                 "IP": ip,
                 "approve": 0,
-                "pending": 0
+                "pending": 0,
+                "balance": 0
             })
             f.seek(0)
             json.dump(data, f, indent=4)
@@ -127,26 +138,30 @@ class MiriCanvas(Tk):
                 ipaddress = item.get("IP")
                 approve = item.get("approve")
                 pending = item.get("pending")
-                self.tree.insert("", "end", values=(email, password, ipaddress, approve, pending))
+                balance = item.get("balance")
+                self.tree.insert("", "end", values=(email, password, ipaddress, approve, pending, balance))
         # self.save_config()
 
     def delete_item(self):
-        try:
-            cur_item = self.tree.focus()
-            item_data = self.tree.item(cur_item)["values"]
-            if cur_item:
-                self.tree.delete(cur_item)
+        selection = self.tree.selection()
+        if (len(selection)) < 1:
+            messagebox.showerror("Error", "Not Select Item Yet")
+            return
+        for item in selection:
+            values = self.tree.item(item)['values']
+            if selection:
+                self.tree.delete(item)
             with open('config', 'r+') as f:
                 data = json.load(f)
                 for i, item in enumerate(data):
-                    if item['email'] == item_data[0]:
+                    if item['email'] == values[0]:
                         del data[i]
                         break
                 f.seek(0)
                 json.dump(data, f, indent=4)
                 f.truncate()
-        except:
-            messagebox.showerror("Erorr", "Item not selected")
+
+
 
     def edit_item(self, event):
         cur_item = self.tree.focus()
@@ -170,41 +185,70 @@ class MiriCanvas(Tk):
         data = []
         for item in self.tree.get_children():
             values = self.tree.item(item)["values"]
-            email, password, ip, approve, pending = values
+            email, password, ip, approve, pending, balance = values
             data.append({
                 "email": email,
                 "password": password,
                 "IP": ip,
                 "approve": approve,
-                "pending": pending
+                "pending": pending,
+                "balance": balance
             })
         with open("config", "w") as f:
             json.dump(data, f)
 
-    def GetChildren(self, ItemInput=None):
+    def GetChildren(self, openProfile=None):
         children = []
         items = []
-        if ItemInput is None:
-            for item in self.tree.get_children():
-                values = self.tree.item(item, 'values')
-                children.append(values)
-                items.append(item)
+        if openProfile == None:
+            selected_items = self.tree.selection()
+            if selected_items:
+                for item in selected_items:
+                    values = self.tree.item(item, 'values')
+                    children.append(values)
+                    items.append(item)
+            else:
+                for item in self.tree.get_children():
+                    values = self.tree.item(item, 'values')
+                    children.append(values)
+                    items.append(item)
+            
         else:
-            for item in ItemInput:
-                values = self.tree.item(item, 'values')
-                children.append(values)
-                items.append(item)
+            selected_items = self.tree.selection()
+            if selected_items:
+                for item in selected_items:
+                    values = self.tree.item(item, 'values')
+                    children.append(values)
+                    items.append(item)
+            else:
+                children = None
+                items = None
         return children, items
 
-    def update_columns(self, child, approved, pending):
-     
-        new_column_2_value = approved
-        new_column_3_value = pending
-        
-        # Cập nhật giá trị đã chỉnh sửa vào cây dữ liệu (treeview)
-        self.tree.set(child, "#4", new_column_2_value)
-        self.tree.set(child, "#5", new_column_3_value)
+    def update_columns(self, child, approved, pending, balance):
+
+        self.tree.set(child, "#4", approved)
+        self.tree.set(child, "#5", pending)
+        self.tree.set(child, "#6", balance)
         self.save_config()
+
+    def threadOpenProfile(self):
+        threading.Thread(target=self.openProfile).start()
+
+    def openProfile(self):
+        childs, items = self.GetChildren(openProfile="openProfile")
+        if items is None:
+            messagebox.showerror("Error", "Not Select Account Yet")
+            return
+        for child in childs:
+            email = child[0]
+            passwd = child[1]
+            prx = child[2]
+
+            insertLog(self.logbox, f"Start Open Profile {email}")
+            threading.Thread(target=openChrome, args=(email, passwd, prx)).start()
+            sleep(3)
+
 
     #---------------------------------------------------------------------------------------------------#
     def startThread(self):
@@ -223,16 +267,10 @@ class MiriCanvas(Tk):
         newThread.start()
 
     def MainUpload(self, eleCounts: int):
-        running = True
-        selected_items = self.tree.selection()
 
-        if selected_items:
-                childs, items = self.GetChildren(selected_items)
-   
-        else:
-            childs, items = self.GetChildren()
+        childs, items = self.GetChildren()
 
-        for index, child in enumerate(childs):
+        for indexx, child in enumerate(childs):
             email = child[0]
             passwd = child[1]
             prx = child[2]
@@ -244,42 +282,41 @@ class MiriCanvas(Tk):
             memId = getMemId(cookie)
             insertLog(self.logbox, f"Got Member ID for requesting {memId}")
 
-            pendingEle = PendingElements(cookie, memId)
-            insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
-            approvedEle = ApprovedElements(cookie, memId)
-            insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
-            self.update_columns(items[index], approvedEle, pendingEle)
             
-            while 1:
+            break_count = 0
+            while True:
+
                 try:
                     folderEle = random.choice(getImageFolders())
-                    running = True
 
                 except:
-                    insertLog(self.logbox, f"Cannot Select a Folder --> Retrying")
-                    running = False
 
-                    break
-                insertLog(self.logbox, f"Folder Selected {folderEle}")
-                elements, hashtag = getItemsInFolder(folderEle)
-                insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
-                break_count = 0
-
-                if hashtag is not None:
-                    insertLog(self.logbox, f"Found Hashtag in folder {folderEle} -- > {hashtag}")
-                    break
-
-                if break_count == 5:
+                    insertLog(self.logbox, f"Cannot Select Folder")
+                    driver.quit()
                     return
                 
-                if hashtag == None:
-                    break_count += 1
-                    insertLog(self.logbox, f"Folder Not Have Hashtag {folderEle} --> Skip")
-                    continue
+                try:
+                    insertLog(self.logbox, f"Folder Selected {folderEle}")
+                    elements, hashtag = getItemsInFolder(folderEle)
+                    insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
+                    
+                    if hashtag is not None:
+                        insertLog(self.logbox, f"Found Hashtag in folder {folderEle} -- > {hashtag}")
+                        break
 
-            if running != True:
-                driver.quit()
-                continue
+                    if break_count == 5:
+                        insertLog(self.logbox, f"Most Folder not have hashtag --> user need check")
+                        driver.quit()
+                        return
+                    
+                    if hashtag == None:
+                        break_count += 1
+                        insertLog(self.logbox, f"Folder Not Have Hashtag {folderEle} --> Skip")
+                        continue
+
+                except Exception as e:
+                    insertLog(self.logbox, e)
+                    return
 
             resetCounts = 0
             batch_size = 50
@@ -316,12 +353,23 @@ class MiriCanvas(Tk):
                             
                 for ele in eleToPlus:
                     MoveImage(folderEle, ele)
+            pendingEle = PendingElements(cookie, memId)
+            insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
+            approvedEle = ApprovedElements(cookie, memId)
+            insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
+            balance = checkBalance(cookie, memId)
+            insertLog(self.logbox, f"Account {email} Balance {balance}")
+            self.update_columns(items[indexx], approvedEle, pendingEle, balance)
             driver.quit()
         self.startButton["state"] = "enabled"
         insertLog(self.logbox, "All Done")
+        if self.checkbox_var.get() == 1:
+            insertLog(self.logbox, f"Start Looping All Account")
+            self.MainUpload(eleCounts)
 
 if __name__ == "__main__":
     app = MiriCanvas()
     app.title("Auto Control MiriCanvas")
     app.resizable(width=False, height=False)
+    app.iconbitmap("icon.ico")
     app.mainloop()

@@ -35,14 +35,16 @@ def getElementsID(cookie, memId):
     
     res = ses.get(url).json()
     for i in res["data"]["content"]:
-
-        eleID.append(i["id"])
-        nameSplited = i["name"].split("-")
-        if len(nameSplited) > 2:
-            concatenated_name = ' '.join(nameSplited[1:])
-            name.append(concatenated_name.replace(".svg", ""))
-        else:
-            name.append(i["name"].split("-")[1].split(".")[0])
+        try:
+            eleID.append(i["id"])
+            nameSplited = i["name"].split("-")
+            if len(nameSplited) > 2:
+                concatenated_name = ' '.join(nameSplited[1:])
+                name.append(concatenated_name.replace(".svg", ""))
+            else:
+                name.append(i["name"].split("-")[1].split(".")[0])
+        except:
+            print(i["name"])
     return eleID, name
 
 def submitItem(cookie, eleId, name, hashtag):
@@ -65,9 +67,12 @@ def checkBalance(cookie, memberid):
     ses = session(cookie)
     resp = ses.get(f"https://api-designhub.miricanvas.com/api/v1/accounting/achievement-summary?aggregateUnit=MONTHLY&endDate=1689866799999&page=0&size=50&startDate=1672498800000&licenseKeys={memberid}")
     if resp.status_code != 200:
-        return None
-    return resp.json()["data"]["content"][0]["totalProfit"]["KRW"]
-
+        return 0
+    try:
+        return int(resp.json()["data"]["content"][0]["totalProfit"]["KRW"])
+    except:
+        return 0
+    
 def PendingElements(cookie, memberid):
     ses = session(cookie)
     resp = ses.get(f"https://api-designhub.miricanvas.com/api/v1/element-items/get-element-integration-items?activeStatuses=WAITING&activeStatuses=ACTIVE&contentReviewItemStatuses=WAITING&contentReviewItemStatuses=RETRY&contentSubmissionStatuses=DONE&memberId={memberid}&size=1")
