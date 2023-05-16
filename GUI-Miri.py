@@ -181,12 +181,29 @@ class MiriCanvas(Tk):
         with open("config", "w") as f:
             json.dump(data, f)
 
-    def GetChildren(self):
+    def GetChildren(self, ItemInput=None):
         children = []
-        for item in self.tree.get_children():
-            values = self.tree.item(item, 'values')
-            children.append(values)
-        return children
+        items = []
+        if ItemInput is None:
+            for item in self.tree.get_children():
+                values = self.tree.item(item, 'values')
+                children.append(values)
+                items.append(item)
+        else:
+            for item in ItemInput:
+                values = self.tree.item(item, 'values')
+                children.append(values)
+                items.append(item)
+        return children, items
+
+    def update_columns(self, child, approved, pending):
+     
+        new_column_2_value = approved
+        new_column_3_value = pending
+        
+        # Cập nhật giá trị đã chỉnh sửa vào cây dữ liệu (treeview)
+        self.tree.set(child, "#4", new_column_2_value)
+        self.tree.set(child, "#5", new_column_3_value)
 
     #---------------------------------------------------------------------------------------------------#
     def startThread(self):
@@ -202,14 +219,44 @@ class MiriCanvas(Tk):
         newThread.start()
 
     def MainUpload(self, eleCounts: int):
-        for child in self.GetChildren():
+        running = True
+        selected_items = self.tree.selection()
+        # childs = None
+        # items = None
+        if selected_items:
+                childs, items = self.GetChildren(selected_items)
+   
+        else:
+            childs, items = self.GetChildren()
+
+        for index, child in enumerate(childs):
             email = child[0]
             passwd = child[1]
             prx = child[2]
             insertLog(self.logbox, f"Currently Logged Account {email}")
             driver = openChrome(email, passwd, prx)
+            sleep(3)
+            cookie = getCookies(driver)
+            insertLog(self.logbox, f"Got cookie for requesting {cookie}")
+            memId = getMemId(cookie)
+            insertLog(self.logbox, f"Got Member ID for requesting {memId}")
+
+            pendingEle = PendingElements(cookie, memId)
+            insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
+            approvedEle = ApprovedElements(cookie, memId)
+            insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
+            # self.tree.set(child, "#2", approvedEle)
+            # self.tree.set(child, "#3", pendingEle)
+            self.update_columns(items[index], approvedEle, pendingEle)
+            self.save_config()
             while 1:
-                folderEle = random.choice(getImageFolders())
+                try:
+                    folderEle = random.choice(getImageFolders())
+                    running = True
+                except:
+                    insertLog(self.logbox, f"Cannot Select a Folder --> Retrying")
+                    running = False
+                    break
                 insertLog(self.logbox, f"Folder Selected {folderEle}")
                 elements, hashtag = getItemsInFolder(folderEle)
                 insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
@@ -224,16 +271,14 @@ class MiriCanvas(Tk):
                     insertLog(self.logbox, f"Folder Not Have Hashtag {folderEle} --> Skip")
                     # thoobg baso log o day
                     continue
-                
-            sleep(1)
+            if running != True:
+                driver.quit()
+                continue
             resetCounts = 0
             batch_size = 50
             if eleCounts < batch_size:
                 batch_size = eleCounts
-            cookie = getCookies(driver)
-            insertLog(self.logbox, f"Got cookie for requesting {cookie}")
-            memId = getMemId(cookie)
-            insertLog(self.logbox, f"Got Member ID for requesting {memId}")
+            
             for i in range(0, eleCounts, batch_size):
                 if int(self.entry_elements.get()) - resetCounts <= batch_size:
                     batch_size = int(self.entry_elements.get()) - resetCounts
@@ -260,6 +305,7 @@ class MiriCanvas(Tk):
             driver.quit()
         self.startButton["state"] = "enabled"
         insertLog(self.logbox, "All Done")
+
 if __name__ == "__main__":
     app = MiriCanvas()
     app.title("Auto Control MiriCanvas")

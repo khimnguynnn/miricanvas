@@ -59,3 +59,25 @@ def submitItem(cookie, eleId, name, hashtag):
             return True
     
     return False
+
+
+def checkBalance(cookie, memberid):
+    ses = session(cookie)
+    resp = ses.get(f"https://api-designhub.miricanvas.com/api/v1/accounting/achievement-summary?aggregateUnit=MONTHLY&endDate=1689866799999&page=0&size=50&startDate=1672498800000&licenseKeys={memberid}")
+    if resp.status_code != 200:
+        return None
+    return resp.json()["data"]["content"][0]["totalProfit"]["KRW"]
+
+def PendingElements(cookie, memberid):
+    ses = session(cookie)
+    resp = ses.get(f"https://api-designhub.miricanvas.com/api/v1/element-items/get-element-integration-items?activeStatuses=WAITING&activeStatuses=ACTIVE&contentReviewItemStatuses=WAITING&contentReviewItemStatuses=RETRY&contentSubmissionStatuses=DONE&memberId={memberid}&size=1")
+    if resp.status_code != 200:
+        return None
+    return resp.json()["data"]["pagination"]["totalCount"]
+
+def ApprovedElements(cookie, memid):
+    ses = session(cookie)
+    resp = ses.get(f"https://api-designhub.miricanvas.com/api/v1/element-items/get-element-integration-items?activeStatuses=WAITING&activeStatuses=ACTIVE&activeStatuses=HIDDEN&activeStatuses=INACTIVE&page=0&size=50&sort=contentReviewItem.approveDate%2CDESC&contentReviewItemStatuses=APPROVAL&contentSubmissionStatuses=DONE&endDate=1689866799999&licenseKey={memid}&startDate=1681578000000")
+    if resp.status_code != 200:
+        return None
+    return resp.json()["data"]["pagination"]["totalCount"]
