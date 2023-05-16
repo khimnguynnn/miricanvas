@@ -204,25 +204,28 @@ class MiriCanvas(Tk):
         # Cập nhật giá trị đã chỉnh sửa vào cây dữ liệu (treeview)
         self.tree.set(child, "#4", new_column_2_value)
         self.tree.set(child, "#5", new_column_3_value)
+        self.save_config()
 
     #---------------------------------------------------------------------------------------------------#
     def startThread(self):
         insertLog(self.logbox, "Application started")
         self.startButton["state"] = "disabled"
         try:
+
             eleCounts = int(self.entry_elements.get())
+
         except:
             messagebox.showerror("Error", "Element Count not Input yet")
             self.startButton["state"] = "enabled"
             return
+        
         newThread = threading.Thread(target=self.MainUpload, args=(eleCounts, ))
         newThread.start()
 
     def MainUpload(self, eleCounts: int):
         running = True
         selected_items = self.tree.selection()
-        # childs = None
-        # items = None
+
         if selected_items:
                 childs, items = self.GetChildren(selected_items)
    
@@ -245,61 +248,72 @@ class MiriCanvas(Tk):
             insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
             approvedEle = ApprovedElements(cookie, memId)
             insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
-            # self.tree.set(child, "#2", approvedEle)
-            # self.tree.set(child, "#3", pendingEle)
             self.update_columns(items[index], approvedEle, pendingEle)
-            self.save_config()
+            
             while 1:
                 try:
                     folderEle = random.choice(getImageFolders())
                     running = True
+
                 except:
                     insertLog(self.logbox, f"Cannot Select a Folder --> Retrying")
                     running = False
+
                     break
                 insertLog(self.logbox, f"Folder Selected {folderEle}")
                 elements, hashtag = getItemsInFolder(folderEle)
                 insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
                 break_count = 0
+
                 if hashtag is not None:
                     insertLog(self.logbox, f"Found Hashtag in folder {folderEle} -- > {hashtag}")
                     break
+
                 if break_count == 5:
                     return
+                
                 if hashtag == None:
                     break_count += 1
                     insertLog(self.logbox, f"Folder Not Have Hashtag {folderEle} --> Skip")
-                    # thoobg baso log o day
                     continue
+
             if running != True:
                 driver.quit()
                 continue
+
             resetCounts = 0
             batch_size = 50
             if eleCounts < batch_size:
                 batch_size = eleCounts
             
             for i in range(0, eleCounts, batch_size):
+
                 if int(self.entry_elements.get()) - resetCounts <= batch_size:
                     batch_size = int(self.entry_elements.get()) - resetCounts
                 driver.get("https://designhub.miricanvas.com/element/upload")
                 sleep(3)
                 insertLog(self.logbox, f"Redirect to Upload Dashboard")
                 eleToPlus = []
+
                 for j in range(i, i+batch_size):
                     eleToPlus.append(elements[j])
                 
                 string_Path = plusImages(folderEle, eleToPlus)
                 insertLog(self.logbox, f"Started Upload Pack {folderEle}")
+
                 if UploadtoMiris(driver, string_Path):
                     eleid, name = getElementsID(cookie, memId)
+
                     for index, ele in enumerate(eleid):
                         arrHashtag = hashtagList(name[index], folderEle, hashtag)
+
                         if submitItem(cookie, ele, name[index], arrHashtag):
                             resetCounts += 1
                             insertLog(self.logbox, f"success upload element -> {name[index]}.svg")
+
                         else:
                             insertLog(self.logbox, f"failed upload element -> {name[index]}.svg")
+                            
                 for ele in eleToPlus:
                     MoveImage(folderEle, ele)
             driver.quit()
