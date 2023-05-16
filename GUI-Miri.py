@@ -223,7 +223,6 @@ class MiriCanvas(Tk):
         newThread.start()
 
     def MainUpload(self, eleCounts: int):
-        running = True
         selected_items = self.tree.selection()
 
         if selected_items:
@@ -250,36 +249,40 @@ class MiriCanvas(Tk):
             insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
             self.update_columns(items[index], approvedEle, pendingEle)
             
-            while 1:
+            break_count = 0
+            while True:
+
                 try:
                     folderEle = random.choice(getImageFolders())
-                    running = True
 
                 except:
-                    insertLog(self.logbox, f"Cannot Select a Folder --> Retrying")
-                    running = False
 
-                    break
-                insertLog(self.logbox, f"Folder Selected {folderEle}")
-                elements, hashtag = getItemsInFolder(folderEle)
-                insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
-                break_count = 0
-
-                if hashtag is not None:
-                    insertLog(self.logbox, f"Found Hashtag in folder {folderEle} -- > {hashtag}")
-                    break
-
-                if break_count == 5:
+                    insertLog(self.logbox, f"Cannot Select Folder")
+                    driver.quit()
                     return
                 
-                if hashtag == None:
-                    break_count += 1
-                    insertLog(self.logbox, f"Folder Not Have Hashtag {folderEle} --> Skip")
-                    continue
+                try:
+                    insertLog(self.logbox, f"Folder Selected {folderEle}")
+                    elements, hashtag = getItemsInFolder(folderEle)
+                    insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
+                    
+                    if hashtag is not None:
+                        insertLog(self.logbox, f"Found Hashtag in folder {folderEle} -- > {hashtag}")
+                        break
 
-            if running != True:
-                driver.quit()
-                continue
+                    if break_count == 5:
+                        insertLog(self.logbox, f"Most Folder not have hashtag --> user need check")
+                        driver.quit()
+                        return
+                    
+                    if hashtag == None:
+                        break_count += 1
+                        insertLog(self.logbox, f"Folder Not Have Hashtag {folderEle} --> Skip")
+                        continue
+
+                except Exception as e:
+                    insertLog(self.logbox, e)
+                    return
 
             resetCounts = 0
             batch_size = 50
