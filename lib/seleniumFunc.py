@@ -5,10 +5,13 @@ from selenium.webdriver.common.by import By
 from proxy_ext import proxies
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
+from selenium.webdriver.chrome.service import Service as ChromeService
+from subprocess import CREATE_NO_WINDOW
 
 def openChrome(userLogin, passwordLogin, proxy, headless=None):
     options = webdriver.ChromeOptions()
+    chrome_service = ChromeService('chromedriver')
+    chrome_service.creationflags = CREATE_NO_WINDOW
     prefs = {"credentials_enable_service": False,
             "profile.password_manager_enabled": False}
     options.add_experimental_option("prefs", prefs)
@@ -32,7 +35,7 @@ def openChrome(userLogin, passwordLogin, proxy, headless=None):
     options.add_argument("--log-level=3")
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Chrome(options=options, service=chrome_service)
     driver.maximize_window()
     driver.implicitly_wait(10)
     driver.get("https://designhub.miricanvas.com/login")
