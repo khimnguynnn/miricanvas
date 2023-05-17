@@ -271,8 +271,6 @@ class MiriCanvas(Tk):
 
     def MainUpload(self):
 
-        
-
         for indexx, child in enumerate(self.childs):
             email = child[0]
             passwd = child[1]
@@ -351,10 +349,10 @@ class MiriCanvas(Tk):
 
                         if submitItem(cookie, ele, name[index], arrHashtag):
                             resetCounts += 1
-                            insertLog(self.logbox, f"success upload element -> {name[index]}.svg")
+                            insertLog(self.logbox, f"success upload element --> {name[index]}.svg")
 
                         else:
-                            insertLog(self.logbox, f"failed upload element -> {name[index]}.svg")
+                            insertLog(self.logbox, f"failed upload element --> {name[index]}.svg")
                             
                 for ele in eleToPlus:
 
@@ -366,7 +364,7 @@ class MiriCanvas(Tk):
             insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
             balance = checkBalance(cookie, memId)
             insertLog(self.logbox, f"Account {email} Balance {balance}")
-            self.update_columns(items[indexx], approvedEle, pendingEle, balance)
+            self.update_columns(self.items[indexx], approvedEle, pendingEle, balance)
             driver.quit()
         self.startButton["state"] = "enabled"
         insertLog(self.logbox, "All Done")
