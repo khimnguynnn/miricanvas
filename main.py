@@ -246,7 +246,7 @@ class MiriCanvas(Tk):
             prx = child[2]
 
             insertLog(self.logbox, f"Start Open Profile {email}")
-            threading.Thread(target=openChrome, args=(email, passwd, prx)).start()
+            threading.Thread(target=openChrome, args=(email, passwd, prx, "OK")).start()
             sleep(3)
 
 
