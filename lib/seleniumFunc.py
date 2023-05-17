@@ -7,7 +7,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-def openChrome(userLogin, passwordLogin, proxy):
+def openChrome(userLogin, passwordLogin, proxy, headless=None):
     options = webdriver.ChromeOptions()
     prefs = {"credentials_enable_service": False,
             "profile.password_manager_enabled": False}
@@ -20,6 +20,8 @@ def openChrome(userLogin, passwordLogin, proxy):
         ip_passw = proxy[3]
         proxies_extension = proxies(ip_user, ip_passw, ip, port)
         options.add_extension(proxies_extension)
+    if headless is None:
+        options.add_argument("--headless=new")
 
     options.add_argument("--disable-web-security")
     options.add_argument("--disable-site-isolation-trials")
