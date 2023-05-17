@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 import os
 import random
+import subprocess
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -56,6 +57,7 @@ def plusImages(folder, images):
     return path.strip()
 
 def MoveImage(folder, file):
-    Path(f"./Uploaded/{folder}").mkdir(parents=True, exist_ok=True)
-    os.system(f"mv ./Images/{folder}/{file} ./Uploaded/{folder}/{file}")
+    #Path(f"./Uploaded/{folder}").mkdir(parents=True, exist_ok=True)
+    #os.system(f"mv ./Images/{folder}/{file} ./Uploaded/{folder}/{file}")
+    subprocess.call(["rm", "-f", f"./Images/{folder}/{file}"], creationflags=subprocess.CREATE_NO_WINDOW)
 
