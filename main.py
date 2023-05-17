@@ -240,6 +240,7 @@ class MiriCanvas(Tk):
         if items is None:
             messagebox.showerror("Error", "Not Select Account Yet")
             return
+        
         for child in childs:
             email = child[0]
             passwd = child[1]
@@ -256,21 +257,23 @@ class MiriCanvas(Tk):
         self.startButton["state"] = "disabled"
         try:
 
-            eleCounts = int(self.entry_elements.get())
+            self.eleCounts = int(self.entry_elements.get())
+            self.childs, self.items = self.GetChildren()
 
         except:
             messagebox.showerror("Error", "Element Count not Input yet")
             self.startButton["state"] = "enabled"
             return
         
-        newThread = threading.Thread(target=self.MainUpload, args=(eleCounts, ))
+        newThread = threading.Thread(target=self.MainUpload)
         newThread.start()
 
-    def MainUpload(self, eleCounts: int):
 
-        childs, items = self.GetChildren()
+    def MainUpload(self):
 
-        for indexx, child in enumerate(childs):
+        
+
+        for indexx, child in enumerate(self.childs):
             email = child[0]
             passwd = child[1]
             prx = child[2]
@@ -315,18 +318,20 @@ class MiriCanvas(Tk):
                         continue
 
                 except Exception as e:
+
                     insertLog(self.logbox, e)
                     return
 
             resetCounts = 0
             batch_size = 50
-            if eleCounts < batch_size:
-                batch_size = eleCounts
-            
-            for i in range(0, eleCounts, batch_size):
+            if self.eleCounts < batch_size:
 
-                if int(self.entry_elements.get()) - resetCounts <= batch_size:
-                    batch_size = int(self.entry_elements.get()) - resetCounts
+                batch_size = self.eleCounts
+            
+            for i in range(0, self.eleCounts, batch_size):
+
+                if int(self.eleCounts) - resetCounts <= batch_size:
+                    batch_size = int(self.eleCounts) - resetCounts
                 driver.get("https://designhub.miricanvas.com/element/upload")
                 sleep(3)
                 insertLog(self.logbox, f"Redirect to Upload Dashboard")
@@ -352,7 +357,9 @@ class MiriCanvas(Tk):
                             insertLog(self.logbox, f"failed upload element -> {name[index]}.svg")
                             
                 for ele in eleToPlus:
+
                     MoveImage(folderEle, ele)
+
             pendingEle = PendingElements(cookie, memId)
             insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
             approvedEle = ApprovedElements(cookie, memId)
@@ -363,9 +370,11 @@ class MiriCanvas(Tk):
             driver.quit()
         self.startButton["state"] = "enabled"
         insertLog(self.logbox, "All Done")
+
         if self.checkbox_var.get() == 1:
+
             insertLog(self.logbox, f"Start Looping All Account")
-            self.MainUpload(eleCounts)
+            self.MainUpload(self.eleCounts)
 
 if __name__ == "__main__":
     app = MiriCanvas()
