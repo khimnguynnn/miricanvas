@@ -44,7 +44,7 @@ def getElementsID(cookie, memId):
             else:
                 name.append(i["name"].split("-")[1].split(".")[0])
         except:
-            print(i["name"])
+            name.append(i["name"])
     return eleID, name
 
 def submitItem(cookie, eleId, name, hashtag):
