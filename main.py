@@ -44,7 +44,7 @@ class MiriCanvas(Tk):
         self.tree.column("approve", width=80, anchor='center')
         self.tree.heading("pending", text="Pending")
         self.tree.column("pending", width=85, anchor='center')
-        self.tree.heading("balance", text="Balance (KRW)")
+        self.tree.heading("balance", text="Balance (USD)")
         self.tree.column("balance", width=100, anchor='center')
 
         # group control account
@@ -267,7 +267,7 @@ class MiriCanvas(Tk):
         approvedEle = ApprovedElements(cookie, memId)
         insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
         balance = checkBalance(cookie, memId)
-        insertLog(self.logbox, f"Account {email} Balance {balance} KRW")
+        insertLog(self.logbox, f"Account {email} Balance {balance} USD")
         self.update_columns(item, approvedEle, pendingEle, balance)
         insertLog(self.logbox, f"Account {email} successful update information")
 
