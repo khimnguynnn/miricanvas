@@ -56,7 +56,7 @@ def plusImages(folder, images):
         path += fr"{p}/{folder}/{item}" + ' \n '
     return path.strip()
 
-def MoveImage(folder, file):
+def DelImage(folder, file):
     file_path = Path(f"./Images/{folder}/{file}")
     file_path.unlink()
 
