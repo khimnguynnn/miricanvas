@@ -58,7 +58,7 @@ class MiriCanvas(Tk):
         # group main
         self.startButton = ttk.Button(self.group_func, text="Start", command=self.startThread)
         self.startButton.grid(row=0, column=3, pady=5, padx=5)
-        self.stopButton = ttk.Button(self.group_func, text="Stop", command=lambda: messagebox.showinfo("Notify", "Feature Not Finished Yet"))
+        self.stopButton = ttk.Button(self.group_func, text="Stop", command=self.StopProgram)
         self.stopButton.grid(row=0, column=4, pady=5, padx=5)
         self.label_count = Label(self.group_func, text="Elements per Acc")
         self.label_count.grid(row=0, column=7, rowspan=2, sticky=N)
@@ -250,19 +250,32 @@ class MiriCanvas(Tk):
             threading.Thread(target=openChrome, args=(email, passwd, prx, "OK")).start()
             sleep(3)
 
+    #---------------------------------------------------------------------------------------------------#
+    def threadStop(self):
+        threading.Thread(target=self.StopProgram).start()
 
+    def StopProgram(self):
+        insertLog(self.logbox, f"Program is Stopping --> Wait")
+        messagebox.showwarning("Notification", "Program is Stopping")
+        self.isStopped = True
     #---------------------------------------------------------------------------------------------------#
     def startThread(self):
+        self.isStopped = False
         insertLog(self.logbox, "Application started")
         self.startButton["state"] = "disabled"
+        self.checkbox["state"] = "disabled"
+        self.entry_elements["state"] = "disabled"
         try:
 
             self.eleCounts = int(self.entry_elements.get())
             self.childs, self.items = self.GetChildren()
+            self.looping = self.checkbox_var.get()
 
         except:
             messagebox.showerror("Error", "Element Count not Input yet")
             self.startButton["state"] = "enabled"
+            self.checkbox["state"] = "enabled"
+            self.entry_elements["state"] = "enabled"
             return
         
         newThread = threading.Thread(target=self.MainUpload)
@@ -336,7 +349,10 @@ class MiriCanvas(Tk):
                 eleToPlus = []
 
                 for j in range(i, i+batch_size):
-                    eleToPlus.append(elements[j])
+                    try:
+                        eleToPlus.append(elements[j])
+                    except:
+                        pass
                 
                 string_Path = plusImages(folderEle, eleToPlus)
                 insertLog(self.logbox, f"Started Upload Pack {folderEle}")
@@ -366,10 +382,18 @@ class MiriCanvas(Tk):
             insertLog(self.logbox, f"Account {email} Balance {balance}")
             self.update_columns(self.items[indexx], approvedEle, pendingEle, balance)
             driver.quit()
+
+            if self.isStopped == True:
+
+                insertLog(self.logbox, f"Program Stopped at account {email}")
+                return
+
         self.startButton["state"] = "enabled"
+        self.checkbox["state"] = "enabled"
+        self.entry_elements["state"] = "enabled"
         insertLog(self.logbox, "All Done")
 
-        if self.checkbox_var.get() == 1:
+        if self.looping == 1:
 
             insertLog(self.logbox, f"Start Looping All Account")
             self.MainUpload(self.eleCounts)
