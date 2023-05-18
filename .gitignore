@@ -9,6 +9,7 @@ Uploaded
 *.so
 miricanvasUpload.py
 miricanvasUpload
+chromedriver.exe
 proxies_extension.zip
 # Distribution / packaging
 .Python

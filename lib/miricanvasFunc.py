@@ -69,8 +69,15 @@ def checkBalance(cookie, memberid):
     if resp.status_code != 200:
         return 0
     try:
-        return int(resp.json()["data"]["content"][0]["totalProfit"]["KRW"])
+        balance = float(resp.json()["data"]["content"][0]["totalProfit"]["KRW"])
     except:
+        return 0
+    resp = ses.get("https://openexchangerates.org/api/latest.json?app_id=91c457aae2834f16b872d16a2201e088")
+    if resp.status_code == 200:
+        ratekrw = resp.json()["rates"]["KRW"]
+        balance = balance / ratekrw
+        return round(balance, 2)
+    else:
         return 0
     
 def PendingElements(cookie, memberid):
