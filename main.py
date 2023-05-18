@@ -10,7 +10,7 @@ from lib.funcFile import *
 from lib.miricanvasFunc import *
 from lib.logger import *
 from time import sleep
-
+from queue import Queue
 
 class MiriCanvas(Tk):
     def __init__(self):
@@ -237,18 +237,24 @@ class MiriCanvas(Tk):
 
     def openProfile(self):
         childs, items = self.GetChildren(openProfile="openProfile")
+        
         if items is None:
             messagebox.showerror("Error", "Not Select Account Yet")
             return
         
-        for child in childs:
+        for index, child in enumerate(childs):
             email = child[0]
             passwd = child[1]
             prx = child[2]
-
+            cookie_result = Queue()
+            memId_result = Queue()
             insertLog(self.logbox, f"Start Open Profile {email}")
-            threading.Thread(target=openChrome, args=(email, passwd, prx, "OK")).start()
+            thread = threading.Thread(target=openChrome, args=(email, passwd, prx, "OK", cookie_result, memId_result))
+            thread.start()
             sleep(3)
+            thread.join()
+            self.updateAccountInfo(items[index], cookie_result.get(), memId_result.get(), email)
+            
 
     def reStateofTkinter(self, state):
         self.startButton["state"] = state
@@ -261,7 +267,7 @@ class MiriCanvas(Tk):
         approvedEle = ApprovedElements(cookie, memId)
         insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
         balance = checkBalance(cookie, memId)
-        insertLog(self.logbox, f"Account {email} Balance {balance}")
+        insertLog(self.logbox, f"Account {email} Balance {balance} KRW")
         self.update_columns(item, approvedEle, pendingEle, balance)
         insertLog(self.logbox, f"Account {email} successful update information")
 

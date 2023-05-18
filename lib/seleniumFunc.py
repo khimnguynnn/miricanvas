@@ -8,8 +8,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from subprocess import CREATE_NO_WINDOW
 from webdriver_manager.chrome import ChromeDriverManager
+from miricanvasFunc import getMemId
 
-def openChrome(userLogin, passwordLogin, proxy, headless=None):
+def openChrome(userLogin, passwordLogin, proxy, headless=None, cookie_result=None, memId_result=None):
     options = webdriver.ChromeOptions()
     chrome_service = ChromeService(ChromeDriverManager().install())
     chrome_service.creationflags = CREATE_NO_WINDOW
@@ -60,7 +61,11 @@ def openChrome(userLogin, passwordLogin, proxy, headless=None):
         sleep(random.uniform(0.1, 0.3))
     sleep(1)
     driver.find_element(By.XPATH, "//button[text()='Log In']").click()
-
+    if headless is not None:
+        sleep(5)
+        cookie = getCookies(driver)
+        cookie_result.put(cookie)
+        memId_result.put(getMemId(cookie))
     return driver
 
 def getCookies(driver):
@@ -87,5 +92,5 @@ def UploadtoMiris(driver, path):
         return True
     
     except:
-        
+
         return False
