@@ -7,10 +7,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from subprocess import CREATE_NO_WINDOW
+from webdriver_manager.chrome import ChromeDriverManager
 
 def openChrome(userLogin, passwordLogin, proxy, headless=None):
     options = webdriver.ChromeOptions()
-    chrome_service = ChromeService('chromedriver')
+    chrome_service = ChromeService(ChromeDriverManager().install())
     chrome_service.creationflags = CREATE_NO_WINDOW
     prefs = {"credentials_enable_service": False,
             "profile.password_manager_enabled": False}
