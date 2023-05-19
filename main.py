@@ -10,7 +10,7 @@ from lib.funcFile import *
 from lib.miricanvasFunc import *
 from lib.logger import *
 from time import sleep
-
+from queue import Queue
 
 class MiriCanvas(Tk):
     def __init__(self):
@@ -44,7 +44,7 @@ class MiriCanvas(Tk):
         self.tree.column("approve", width=80, anchor='center')
         self.tree.heading("pending", text="Pending")
         self.tree.column("pending", width=85, anchor='center')
-        self.tree.heading("balance", text="Balance (KRW)")
+        self.tree.heading("balance", text="Balance (USD)")
         self.tree.column("balance", width=100, anchor='center')
 
         # group control account
@@ -58,7 +58,7 @@ class MiriCanvas(Tk):
         # group main
         self.startButton = ttk.Button(self.group_func, text="Start", command=self.startThread)
         self.startButton.grid(row=0, column=3, pady=5, padx=5)
-        self.stopButton = ttk.Button(self.group_func, text="Stop", command=lambda: messagebox.showinfo("Notify", "Feature Not Finished Yet"))
+        self.stopButton = ttk.Button(self.group_func, text="Stop", command=self.StopProgram)
         self.stopButton.grid(row=0, column=4, pady=5, padx=5)
         self.label_count = Label(self.group_func, text="Elements per Acc")
         self.label_count.grid(row=0, column=7, rowspan=2, sticky=N)
@@ -237,32 +237,62 @@ class MiriCanvas(Tk):
 
     def openProfile(self):
         childs, items = self.GetChildren(openProfile="openProfile")
+        
         if items is None:
             messagebox.showerror("Error", "Not Select Account Yet")
             return
         
-        for child in childs:
+        for index, child in enumerate(childs):
             email = child[0]
             passwd = child[1]
             prx = child[2]
-
+            cookie_result = Queue()
+            memId_result = Queue()
             insertLog(self.logbox, f"Start Open Profile {email}")
-            threading.Thread(target=openChrome, args=(email, passwd, prx, "OK")).start()
+            thread = threading.Thread(target=openChrome, args=(email, passwd, prx, "OK", cookie_result, memId_result))
+            thread.start()
             sleep(3)
+            thread.join()
+            self.updateAccountInfo(items[index], cookie_result.get(), memId_result.get(), email)
+            
 
+    def reStateofTkinter(self, state):
+        self.startButton["state"] = state
+        self.checkbox["state"] = state
+        self.entry_elements["state"] = state
+    
+    def updateAccountInfo(self, item, cookie, memId, email):
+        pendingEle = PendingElements(cookie, memId)
+        insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
+        approvedEle = ApprovedElements(cookie, memId)
+        insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
+        balance = checkBalance(cookie, memId)
+        insertLog(self.logbox, f"Account {email} Balance {balance} USD")
+        self.update_columns(item, approvedEle, pendingEle, balance)
+        insertLog(self.logbox, f"Account {email} successful update information")
 
     #---------------------------------------------------------------------------------------------------#
+    def threadStop(self):
+        threading.Thread(target=self.StopProgram).start()
+
+    def StopProgram(self):
+        insertLog(self.logbox, f"Program is Stopping --> Wait")
+        messagebox.showwarning("Notification", "Program is Stopping")
+        self.isStopped = True
+    #---------------------------------------------------------------------------------------------------#
     def startThread(self):
+        self.isStopped = False
         insertLog(self.logbox, "Application started")
-        self.startButton["state"] = "disabled"
+        self.reStateofTkinter("disabled")
         try:
 
             self.eleCounts = int(self.entry_elements.get())
             self.childs, self.items = self.GetChildren()
+            self.looping = self.checkbox_var.get()
 
         except:
             messagebox.showerror("Error", "Element Count not Input yet")
-            self.startButton["state"] = "enabled"
+            self.reStateofTkinter("enabled")
             return
         
         newThread = threading.Thread(target=self.MainUpload)
@@ -272,6 +302,7 @@ class MiriCanvas(Tk):
     def MainUpload(self):
 
         for indexx, child in enumerate(self.childs):
+
             email = child[0]
             passwd = child[1]
             prx = child[2]
@@ -280,11 +311,20 @@ class MiriCanvas(Tk):
             sleep(3)
             cookie = getCookies(driver)
             insertLog(self.logbox, f"Got cookie for requesting {cookie}")
-            memId = getMemId(cookie)
-            insertLog(self.logbox, f"Got Member ID for requesting {memId}")
-
-            
+            handle_count = 0
+            for _ in range (5):
+                try:
+                    memId = getMemId(cookie)
+                    break
+                except:
+                    handle_count += 1
+                    continue
+            if handle_count == 5:
+                insertLog(self.logbox, f"Account {email} get error --> skip {email} account") 
+                continue
+            insertLog(self.logbox, f"Got Member ID for requesting {memId}") 
             break_count = 0
+
             while True:
 
                 try:
@@ -327,16 +367,18 @@ class MiriCanvas(Tk):
                 batch_size = self.eleCounts
             
             for i in range(0, self.eleCounts, batch_size):
-
+                insertLog(self.logbox, f"Redirect to Upload Dashboard")
                 if int(self.eleCounts) - resetCounts <= batch_size:
                     batch_size = int(self.eleCounts) - resetCounts
                 driver.get("https://designhub.miricanvas.com/element/upload")
                 sleep(3)
-                insertLog(self.logbox, f"Redirect to Upload Dashboard")
                 eleToPlus = []
 
                 for j in range(i, i+batch_size):
-                    eleToPlus.append(elements[j])
+                    try:
+                        eleToPlus.append(elements[j])
+                    except:
+                        pass
                 
                 string_Path = plusImages(folderEle, eleToPlus)
                 insertLog(self.logbox, f"Started Upload Pack {folderEle}")
@@ -356,20 +398,22 @@ class MiriCanvas(Tk):
                             
                 for ele in eleToPlus:
 
-                    MoveImage(folderEle, ele)
+                    DelImage(folderEle, ele)
 
-            pendingEle = PendingElements(cookie, memId)
-            insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
-            approvedEle = ApprovedElements(cookie, memId)
-            insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
-            balance = checkBalance(cookie, memId)
-            insertLog(self.logbox, f"Account {email} Balance {balance}")
-            self.update_columns(self.items[indexx], approvedEle, pendingEle, balance)
+            self.updateAccountInfo(self.items[indexx], cookie, memId, email)
             driver.quit()
-        self.startButton["state"] = "enabled"
+
+            if self.isStopped == True:
+                
+                insertLog(self.logbox, f"Program Stopped at account {email}")
+                self.reStateofTkinter("enabled")
+
+                return
+
+        self.reStateofTkinter("enabled")
         insertLog(self.logbox, "All Done")
 
-        if self.checkbox_var.get() == 1:
+        if self.looping == 1:
 
             insertLog(self.logbox, f"Start Looping All Account")
             self.MainUpload(self.eleCounts)

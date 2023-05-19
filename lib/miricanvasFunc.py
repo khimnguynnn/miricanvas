@@ -1,5 +1,6 @@
 from requests import Session
 import json
+from time import sleep
 
 def session(cookie):
     ses = Session()
@@ -8,6 +9,7 @@ def session(cookie):
     "accept-encoding": "gzip, deflate, br",
     "accept-language": "en-US,en;q=0.9,vi;q=0.8,zh-TW;q=0.7,zh;q=0.6",
     "content-type": "application/json",
+    "Connection": "keep-alive",
     "cookie": cookie,
     "origin": "https://designhub.miricanvas.com",
     "referer": "https://designhub.miricanvas.com/",
@@ -58,16 +60,17 @@ def submitItem(cookie, eleId, name, hashtag):
         resp = ses.patch(url, data=json.dumps(data1))
         if resp.status_code == 200:
 
-            data2 = {"contentSubmissionStatus":"DONE"}
-            url = f"https://api-designhub.miricanvas.com/api/v1/element-items/{eleId}/change-content-submission-status"
-            resp = ses.patch(url, data=json.dumps(data2))
-            if resp.status_code == 200:
-                return True
-        else:
+        for _ in range(3):
+            try:
+                data2 = {"contentSubmissionStatus":"DONE"}
+                url = f"https://api-designhub.miricanvas.com/api/v1/element-items/{eleId}/change-content-submission-status"
+                resp = ses.patch(url, data=json.dumps(data2))
+                if resp.status_code == 200:
+                    return True
+            except:
+                sleep(1)
+                continue
             return False
-    except:
-
-        return False
 
 
 def checkBalance(cookie, memberid):
@@ -76,8 +79,15 @@ def checkBalance(cookie, memberid):
     if resp.status_code != 200:
         return 0
     try:
-        return int(resp.json()["data"]["content"][0]["totalProfit"]["KRW"])
+        balance = float(resp.json()["data"]["content"][0]["totalProfit"]["KRW"])
     except:
+        return 0
+    resp = ses.get("https://openexchangerates.org/api/latest.json?app_id=91c457aae2834f16b872d16a2201e088")
+    if resp.status_code == 200:
+        ratekrw = resp.json()["rates"]["KRW"]
+        balance = balance / ratekrw
+        return round(balance, 2)
+    else:
         return 0
     
 def PendingElements(cookie, memberid):
