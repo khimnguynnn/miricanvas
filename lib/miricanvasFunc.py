@@ -27,7 +27,10 @@ def getMemId(cookie):
     url = "https://api-designhub.miricanvas.com/api/v1/members/get-current-member"
     ses = session(cookie)
     res = ses.get(url).json()
-    return res["data"]["id"]
+    try:
+        return res["data"]["id"]
+    except:
+        print(res)
 
 def getElementsID(cookie, memId):
     eleID = []
@@ -50,11 +53,12 @@ def getElementsID(cookie, memId):
     return eleID, name
 
 def submitItem(cookie, eleId, name, hashtag):
-    ses = session(cookie)
-    url = f"https://api-designhub.miricanvas.com/api/v1/element-items/{eleId}"
-    data1 = {"contentTier":"PREMIUM","name":name,"keywords": hashtag}
-    resp = ses.patch(url, data=json.dumps(data1))
-    if resp.status_code == 200:
+    try:
+        ses = session(cookie)
+        url = f"https://api-designhub.miricanvas.com/api/v1/element-items/{eleId}"
+        data1 = {"contentTier":"PREMIUM","name":name,"keywords": hashtag}
+        resp = ses.patch(url, data=json.dumps(data1))
+        if resp.status_code == 200:
 
         for _ in range(3):
             try:
