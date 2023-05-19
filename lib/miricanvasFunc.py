@@ -53,12 +53,11 @@ def getElementsID(cookie, memId):
     return eleID, name
 
 def submitItem(cookie, eleId, name, hashtag):
-    try:
-        ses = session(cookie)
-        url = f"https://api-designhub.miricanvas.com/api/v1/element-items/{eleId}"
-        data1 = {"contentTier":"PREMIUM","name":name,"keywords": hashtag}
-        resp = ses.patch(url, data=json.dumps(data1))
-        if resp.status_code == 200:
+    ses = session(cookie)
+    url = f"https://api-designhub.miricanvas.com/api/v1/element-items/{eleId}"
+    data1 = {"contentTier":"PREMIUM","name":name,"keywords": hashtag}
+    resp = ses.patch(url, data=json.dumps(data1))
+    if resp.status_code == 200:
 
         for _ in range(3):
             try:
