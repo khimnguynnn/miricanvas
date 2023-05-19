@@ -1,5 +1,6 @@
 from requests import Session
 import json
+from time import sleep
 
 def session(cookie):
     ses = Session()
@@ -8,6 +9,7 @@ def session(cookie):
     "accept-encoding": "gzip, deflate, br",
     "accept-language": "en-US,en;q=0.9,vi;q=0.8,zh-TW;q=0.7,zh;q=0.6",
     "content-type": "application/json",
+    "Connection": "keep-alive",
     "cookie": cookie,
     "origin": "https://designhub.miricanvas.com",
     "referer": "https://designhub.miricanvas.com/",
@@ -54,13 +56,17 @@ def submitItem(cookie, eleId, name, hashtag):
     resp = ses.patch(url, data=json.dumps(data1))
     if resp.status_code == 200:
 
-        data2 = {"contentSubmissionStatus":"DONE"}
-        url = f"https://api-designhub.miricanvas.com/api/v1/element-items/{eleId}/change-content-submission-status"
-        resp = ses.patch(url, data=json.dumps(data2))
-        if resp.status_code == 200:
-            return True
-    
-    return False
+        for _ in range(3):
+            try:
+                data2 = {"contentSubmissionStatus":"DONE"}
+                url = f"https://api-designhub.miricanvas.com/api/v1/element-items/{eleId}/change-content-submission-status"
+                resp = ses.patch(url, data=json.dumps(data2))
+                if resp.status_code == 200:
+                    return True
+            except:
+                sleep(1)
+                continue
+            return False
 
 
 def checkBalance(cookie, memberid):
