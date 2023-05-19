@@ -311,7 +311,17 @@ class MiriCanvas(Tk):
             sleep(3)
             cookie = getCookies(driver)
             insertLog(self.logbox, f"Got cookie for requesting {cookie}")
-            memId = getMemId(cookie)
+            handle_count = 0
+            for _ in range (5):
+                try:
+                    memId = getMemId(cookie)
+                    break
+                except:
+                    handle_count += 1
+                    continue
+            if handle_count == 5:
+                insertLog(self.logbox, f"Account {email} get error --> skip {email} account") 
+                continue
             insertLog(self.logbox, f"Got Member ID for requesting {memId}") 
             break_count = 0
 
@@ -357,12 +367,11 @@ class MiriCanvas(Tk):
                 batch_size = self.eleCounts
             
             for i in range(0, self.eleCounts, batch_size):
-
+                insertLog(self.logbox, f"Redirect to Upload Dashboard")
                 if int(self.eleCounts) - resetCounts <= batch_size:
                     batch_size = int(self.eleCounts) - resetCounts
                 driver.get("https://designhub.miricanvas.com/element/upload")
                 sleep(3)
-                insertLog(self.logbox, f"Redirect to Upload Dashboard")
                 eleToPlus = []
 
                 for j in range(i, i+batch_size):
