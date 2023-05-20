@@ -8,9 +8,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from subprocess import CREATE_NO_WINDOW
 from webdriver_manager.chrome import ChromeDriverManager
-from miricanvasFunc import getMemId
 
-def openChrome(userLogin, passwordLogin, proxy, headless=None, cookie_result=None, memId_result=None):
+def openChrome(userLogin, passwordLogin, proxy, headless=None, cookie_result=None):
     options = webdriver.ChromeOptions()
     chrome_service = ChromeService(ChromeDriverManager().install())
     chrome_service.creationflags = CREATE_NO_WINDOW
@@ -65,7 +64,6 @@ def openChrome(userLogin, passwordLogin, proxy, headless=None, cookie_result=Non
         sleep(5)
         cookie = getCookies(driver)
         cookie_result.put(cookie)
-        memId_result.put(getMemId(cookie))
     return driver
 
 def getCookies(driver):
