@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 import random
 from pathlib import Path
+import glob
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -60,3 +61,18 @@ def DelImage(folder, file):
     file_path = Path(f"./Images/{folder}/{file}")
     file_path.unlink()
 
+def RemoveEmptyFolder(folder):
+    file_paths = glob.glob(f"./Images/{folder}/*")
+    for file_path in file_paths:
+        os.unlink(file_path)
+
+    file_path = Path(f"./Images/{folder}/")
+    file_path.rmdir()
+
+
+def isHaveElements(folder, filename):
+    file_path = Path(f"./Images/{folder}/{filename}")
+
+    return True if len(open(file_path).read()) > 5 else False
+
+    
