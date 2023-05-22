@@ -375,7 +375,7 @@ class MiriCanvas(Tk):
 
                     except Exception as e:
                         insertLog(self.logbox, e)
-                        return
+                        continue
                     
                 insertLog(self.logbox, f"Redirect to Upload Dashboard")
                 if int(self.eleCounts) - resetCounts <= batch_size:
