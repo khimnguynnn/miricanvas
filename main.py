@@ -4,13 +4,14 @@ from tkinter import messagebox
 import json
 import threading
 import sys
+from time import sleep
+from queue import Queue
 sys.path.append('./lib')
 from lib.seleniumFunc import *
 from lib.funcFile import *
-from lib.miricanvasFunc import *
 from lib.logger import *
-from time import sleep
-from queue import Queue
+from lib.miricanvasFunc import miricanvasFeature
+
 
 class MiriCanvas(Tk):
     def __init__(self):
@@ -247,13 +248,12 @@ class MiriCanvas(Tk):
             passwd = child[1]
             prx = child[2]
             cookie_result = Queue()
-            memId_result = Queue()
             insertLog(self.logbox, f"Start Open Profile {email}")
-            thread = threading.Thread(target=openChrome, args=(email, passwd, prx, "OK", cookie_result, memId_result))
+            thread = threading.Thread(target=openChrome, args=(email, passwd, prx, "OK", cookie_result))
             thread.start()
             sleep(3)
             thread.join()
-            self.updateAccountInfo(items[index], cookie_result.get(), memId_result.get(), email)
+            self.updateAccountInfo(items[index], cookie_result.get(), email, prx)
             
 
     def reStateofTkinter(self, state):
@@ -261,15 +261,18 @@ class MiriCanvas(Tk):
         self.checkbox["state"] = state
         self.entry_elements["state"] = state
     
-    def updateAccountInfo(self, item, cookie, memId, email):
-        pendingEle = PendingElements(cookie, memId)
+    def updateAccountInfo(self, item, cookie, email, prx):
+
+        miri = miricanvasFeature(cookie, prx)
+        pendingEle =miri.PendingElements()
+        approvedEle = miri.ApprovedElements()
+        balance = miri.checkBalance()
         insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
-        approvedEle = ApprovedElements(cookie, memId)
         insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
-        balance = checkBalance(cookie, memId)
         insertLog(self.logbox, f"Account {email} Balance {balance} USD")
         self.update_columns(item, approvedEle, pendingEle, balance)
         insertLog(self.logbox, f"Account {email} successful update information")
+
 
     #---------------------------------------------------------------------------------------------------#
     def threadStop(self):
@@ -310,11 +313,13 @@ class MiriCanvas(Tk):
             driver = openChrome(email, passwd, prx)
             sleep(3)
             cookie = getCookies(driver)
+            self.miriClass = miricanvasFeature(cookie, prx)
+            
             insertLog(self.logbox, f"Got cookie for requesting {cookie}")
             handle_count = 0
             for _ in range (5):
                 try:
-                    memId = getMemId(cookie)
+                    memId = self.miriClass.memberID()
                     break
                 except:
                     handle_count += 1
@@ -324,49 +329,54 @@ class MiriCanvas(Tk):
                 continue
             insertLog(self.logbox, f"Got Member ID for requesting {memId}") 
             break_count = 0
-
-            while True:
-
-                try:
-                    folderEle = random.choice(getImageFolders())
-
-                except:
-
-                    insertLog(self.logbox, f"Cannot Select Folder")
-                    driver.quit()
-                    return
-                
-                try:
-                    insertLog(self.logbox, f"Folder Selected {folderEle}")
-                    elements, hashtag = getItemsInFolder(folderEle)
-                    insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
-                    
-                    if hashtag is not None:
-                        insertLog(self.logbox, f"Found Hashtag in folder {folderEle} -- > {hashtag}")
-                        break
-
-                    if break_count == 5:
-                        insertLog(self.logbox, f"Most Folder not have hashtag --> user need check")
-                        driver.quit()
-                        return
-                    
-                    if hashtag == None:
-                        break_count += 1
-                        insertLog(self.logbox, f"Folder Not Have Hashtag {folderEle} --> Skip")
-                        continue
-
-                except Exception as e:
-
-                    insertLog(self.logbox, e)
-                    return
-
             resetCounts = 0
             batch_size = 50
             if self.eleCounts < batch_size:
 
                 batch_size = self.eleCounts
             
-            for i in range(0, self.eleCounts, batch_size):
+            for _ in range(0, self.eleCounts, batch_size):
+
+                while True:
+
+                    try:
+                        folderEle = random.choice(getImageFolders())
+
+                    except:
+
+                        insertLog(self.logbox, f"Cannot Select Folder")
+                        driver.quit()
+                        return
+                    
+                    try:
+                        insertLog(self.logbox, f"Folder Selected {folderEle}")
+                        elements, hashtag = getItemsInFolder(folderEle)
+                        insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
+                        if len(elements) < 2:
+                            insertLog(self.logbox, f"No Elements Found in Folder --> Folder {folderEle} Removed")
+                            RemoveEmptyFolder(folderEle)
+                            continue
+                        if isHaveElements(folderEle, hashtag) != True:
+                            continue
+                        
+                        if hashtag is not None:
+                            insertLog(self.logbox, f"Found Hashtag in folder {folderEle} -- > {hashtag}")
+                            break
+
+                        if break_count == 5:
+                            insertLog(self.logbox, f"Most Folder not have hashtag --> user need check")
+                            driver.quit()
+                            return
+                        
+                        if hashtag == None:
+                            break_count += 1
+                            insertLog(self.logbox, f"Folder Not Have Hashtag {folderEle} --> Skip")
+                            continue
+
+                    except Exception as e:
+                        insertLog(self.logbox, e)
+                        continue
+                    
                 insertLog(self.logbox, f"Redirect to Upload Dashboard")
                 if int(self.eleCounts) - resetCounts <= batch_size:
                     batch_size = int(self.eleCounts) - resetCounts
@@ -374,7 +384,7 @@ class MiriCanvas(Tk):
                 sleep(3)
                 eleToPlus = []
 
-                for j in range(i, i+batch_size):
+                for j in range(0, batch_size):
                     try:
                         eleToPlus.append(elements[j])
                     except:
@@ -384,23 +394,25 @@ class MiriCanvas(Tk):
                 insertLog(self.logbox, f"Started Upload Pack {folderEle}")
 
                 if UploadtoMiris(driver, string_Path):
-                    eleid, name = getElementsID(cookie, memId)
+                    eleid, name = self.miriClass.getElementsID()
 
                     for index, ele in enumerate(eleid):
                         arrHashtag = hashtagList(name[index], folderEle, hashtag)
 
-                        if submitItem(cookie, ele, name[index], arrHashtag):
+                        if self.miriClass.submitItem(ele, name[index], arrHashtag):
                             resetCounts += 1
-                            insertLog(self.logbox, f"success upload element --> {name[index]}.svg")
+                            insertLog(self.logbox, f"Account {email} success upload element --> {name[index]}.svg")
 
                         else:
-                            insertLog(self.logbox, f"failed upload element --> {name[index]}.svg")
+                            insertLog(self.logbox, f"Account {email} failed upload element --> {name[index]}.svg")
+                            self.miriClass.DeleteErrorElement(ele)
+                            insertLog(self.logbox, f"Success Delete Error Element --> {name[index]}.svg")
                             
                 for ele in eleToPlus:
 
                     DelImage(folderEle, ele)
 
-            self.updateAccountInfo(self.items[indexx], cookie, memId, email)
+            self.updateAccountInfo(self.items[indexx], cookie, email, prx)
             driver.quit()
 
             if self.isStopped == True:
