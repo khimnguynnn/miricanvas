@@ -19,10 +19,10 @@ class miricanvasFeature:
         self.memid = self.memberID()
         #CONST URL
         self.ELEMENTID = f"https://api-designhub.miricanvas.com/api/v1/element-items/get-element-integration-items?activeStatuses=WAITING&activeStatuses=ACTIVE&activeStatuses=HIDDEN&activeStatuses=INACTIVE&page=0&size=100&sort=createDate%2CDESC&contentSubmissionStatuses=TO_BE_SUBMITTED&memberId={self.memid}"
-        self.BALANCE_URL = f"https://api-designhub.miricanvas.com/api/v1/accounting/achievement-summary?aggregateUnit=MONTHLY&endDate=1689866799999&page=0&size=50&startDate=1672498800000&licenseKeys={self.memid}"
+        self.BALANCE_URL = f"https://api-designhub.miricanvas.com/api/v1/accounting/achievement-summary?aggregateUnit=YEARLY&endDate=1704036399999&page=0&size=50&startDate=1672498800000&licenseKeys={self.memid}"
         self.RATE_URL = "https://openexchangerates.org/api/latest.json?app_id=91c457aae2834f16b872d16a2201e088"
         self.PENDING_URL = f"https://api-designhub.miricanvas.com/api/v1/element-items/get-element-integration-items?activeStatuses=WAITING&activeStatuses=ACTIVE&contentReviewItemStatuses=WAITING&contentReviewItemStatuses=RETRY&contentSubmissionStatuses=DONE&memberId={self.memid}&size=1"
-        self.ARPPROVED_URL = f"https://api-designhub.miricanvas.com/api/v1/element-items/get-element-integration-items?activeStatuses=WAITING&activeStatuses=ACTIVE&activeStatuses=HIDDEN&activeStatuses=INACTIVE&page=0&size=50&sort=contentReviewItem.approveDate%2CDESC&contentReviewItemStatuses=APPROVAL&contentSubmissionStatuses=DONE&endDate=1689866799999&licenseKey={self.memid}&startDate=1681578000000"
+        self.ARPPROVED_URL = f"https://api-designhub.miricanvas.com/api/v1/element-items/get-element-integration-items?activeStatuses=WAITING&activeStatuses=ACTIVE&activeStatuses=HIDDEN&activeStatuses=INACTIVE&page=0&size=50&sort=contentReviewItem.approveDate%2CDESC&contentReviewItemStatuses=APPROVAL&contentSubmissionStatuses=DONE&endDate=1704036399999&licenseKey={self.memid}&startDate=1681578000000"
 
         
     def session(self, cookie):

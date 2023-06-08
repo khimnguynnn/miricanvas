@@ -27,12 +27,16 @@ class MiriCanvas(Tk):
         # frame
         self.group = Frame(main, padx=5, pady=5)
         self.group.grid(row=0, column=0, padx=10, pady=10)
-
+        
+        # scrollbar treeview
+        self.treescroll = ttk.Scrollbar(self.group)
+        self.treescroll.pack(side=RIGHT, fill=Y)
+        
         # Treview
         s = ttk.Style()
         s.theme_use('clam')
         s.configure('Treeview.Heading', background="#0099CC")
-        self.tree = ttk.Treeview(self.group, show='headings', height=8)
+        self.tree = ttk.Treeview(self.group, show='headings', height=8, yscrollcommand=self.treescroll.set)
         self.tree.pack()
         self.tree["columns"] = ("email","password", "ip", "approve", "pending", "balance")
         self.tree.heading("email", text="Email")
@@ -47,7 +51,10 @@ class MiriCanvas(Tk):
         self.tree.column("pending", width=85, anchor='center')
         self.tree.heading("balance", text="Balance (USD)")
         self.tree.column("balance", width=100, anchor='center')
-
+        
+        # link scrollbar to treeview
+        self.treescroll.config(command=self.tree.yview)
+        
         # group control account
         self.group_func = LabelFrame(main, text="Main Control", padx=42, pady=5)
         self.group_func.grid(row=1, column=0, rowspan=2, columnspan=2)
