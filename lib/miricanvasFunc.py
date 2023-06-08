@@ -96,15 +96,21 @@ class miricanvasFeature:
 
 
     def checkBalance(self):
+        resp = self.ses.get(self.BALANCE_URL)
+
         try:
-            resp = self.ses.get(self.BALANCE_URL)
             balance = float(resp.json()["data"]["content"][0]["totalProfit"]["KRW"]) if resp.status_code == 200 else 0
         except:
             return 0
+        
+        try:
+            balance_usd = float(resp.json()["data"]["content"][0]["totalProfit"]["USD"]) if resp.status_code == 200 else 0
+        except:
+            balance_usd = 0
 
         try:
             resp = self.ses.get(self.RATE_URL)
-            return round(balance / resp.json()["rates"]["KRW"], 2) if resp.status_code == 200 else 0
+            return round(balance / resp.json()["rates"]["KRW"] + balance_usd, 2) if resp.status_code == 200 else 0
         except:
             return 0
 
