@@ -8,6 +8,7 @@ Images/
 Uploaded
 *.so
 miricanvasUpload.py
+DeleteErrorFolder.py
 miricanvasUpload
 chromedriver.exe
 proxies_extension.zip

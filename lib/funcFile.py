@@ -4,6 +4,38 @@ import os
 import random
 from pathlib import Path
 import glob
+from requests import Session
+
+ses = Session()
+ses.headers.update({
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+        "X-Requested-With": "XMLHttpRequest"
+})
+
+def requestWord(word):
+    if " " in  word:
+        return word
+    if len(word) < 6:
+        return word
+    data = {
+        "action": "checkers_api",
+        "content": word
+    }
+
+    resp = ses.post("https://writer.com/wp-admin/admin-ajax.php", data=data)
+
+    try:
+        if resp.status_code == 200:
+            result = resp.json()["data"]["issues"][0]["suggestions"][0].lower()
+            if result.replace(" ", "") == word:
+                return result
+            else:
+                return word
+
+    except:
+
+        return word
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -42,9 +74,11 @@ def hashtagList(name, folder, filename):
     p = Path(ImagesPath().replace("lib\\", "") + f"\\{folder}\\{filename}")
     with open(p, "r") as f:
         words = f.read().split(",")
+    name = requestWord(name)
 
-    hashtag = random.sample(words, k=24)
+    hashtag = random.sample(words, k=20)
     hashtag.insert(0, name)
+    hashtag = list(dict.fromkeys(hashtag))
 
     return hashtag
 

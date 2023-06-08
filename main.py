@@ -255,6 +255,13 @@ class MiriCanvas(Tk):
             thread.join()
             self.updateAccountInfo(items[index], cookie_result.get(), email, prx)
             
+    def find_value(self, value):
+        items = self.tree.get_children()  
+        for item in items:
+            item_value = self.tree.item(item)['values'][0]  
+            if item_value == value:
+                return self.tree.item(item)['values'][-1]
+        return None
 
     def reStateofTkinter(self, state):
         self.startButton["state"] = state
@@ -267,9 +274,12 @@ class MiriCanvas(Tk):
         pendingEle =miri.PendingElements()
         approvedEle = miri.ApprovedElements()
         balance = miri.checkBalance()
+        
+        rowItem = self.find_value(email)
+        
         insertLog(self.logbox, f"Account {email} found {pendingEle} Elements Pending")
         insertLog(self.logbox, f"Account {email} found {approvedEle} Elements Approved")
-        insertLog(self.logbox, f"Account {email} Balance {balance} USD")
+        insertLog(self.logbox, f"Account {email} Balance change from {rowItem} USD to {balance} USD")
         self.update_columns(item, approvedEle, pendingEle, balance)
         insertLog(self.logbox, f"Account {email} successful update information")
 
