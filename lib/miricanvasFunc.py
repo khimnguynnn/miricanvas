@@ -5,10 +5,8 @@ from time import sleep
 class miricanvasFeature:
     def __init__(self, cookie, proxy=None):
         self.MEMID = "https://api-designhub.miricanvas.com/api/v1/members/get-current-member"
-        # account cookie
-        self.cookie = cookie
         # session
-        self.ses = self.session(self.cookie)
+        self.ses = self.session(cookie)
         proxy = proxy.split(":")
         if proxy is not None:
             self.ses.proxies = {
@@ -112,7 +110,7 @@ class miricanvasFeature:
             resp = self.ses.get(self.RATE_URL)
             return round(balance / resp.json()["rates"]["KRW"] + balance_usd, 2) if resp.status_code == 200 else 0
         except:
-            return 0
+            return round(balance / 1287.68 + balance_usd, 2)
 
 
     def PendingElements(self):
