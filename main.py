@@ -274,6 +274,7 @@ class MiriCanvas(Tk):
         self.startButton["state"] = state
         self.checkbox["state"] = state
         self.entry_elements["state"] = state
+        self.checkbox["state"] = state
     
     def updateAccountInfo(self, item, cookie, email, prx):
 
