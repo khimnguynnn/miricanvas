@@ -445,7 +445,7 @@ class MiriCanvas(Tk):
         if self.looping == 1:
 
             insertLog(self.logbox, f"Start Looping All Account")
-            self.MainUpload(self.eleCounts)
+            self.MainUpload()
 
 if __name__ == "__main__":
     app = MiriCanvas()
