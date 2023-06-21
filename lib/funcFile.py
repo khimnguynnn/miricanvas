@@ -69,8 +69,8 @@ def getItemsInFolder(folder):
     return svgFile
 
 def hashtagList(name):
-    hashtag = getHashtag(name)
-    return hashtag
+    hashtag, source = getHashtag(name)
+    return hashtag, source
 
 
 def plusImages(folder, images):
@@ -93,12 +93,6 @@ def RemoveEmptyFolder(folder):
     file_path = Path(f"./Images/{folder}/")
     file_path.rmdir()
 
-
-# def isHaveElements(folder, filename):
-#     file_path = Path(f"./Images/{folder}/{filename}")
-
-#     return True if len(open(file_path).read()) > 5 else False
-
 def count_keywords(lst):
     keyword_count = {}
     for keyword in lst:
@@ -118,11 +112,11 @@ def getHashtag(input_keyword):
     })
 
     keyword_list = []
-
+    _From = ""
     string_keywords = ""
 
     if r.exists(input_keyword):
-        print("got keyword from redis")
+        _From = "Redis"
         value = (r.get(input_keyword)).decode()
         for tag in value.split(","):
             keyword_list.append(tag)
@@ -154,10 +148,10 @@ def getHashtag(input_keyword):
         string_keywords = ",".join(i for i in keyword_list)
 
         r.set(input_keyword, string_keywords)
-        print("got keyword from keyworder")
+        _From = "Keyworder"
         r.close()
     keyword_list.insert(0, input_keyword)
 
     keyword_list = list(dict.fromkeys(keyword_list))
 
-    return keyword_list
+    return keyword_list, _From
