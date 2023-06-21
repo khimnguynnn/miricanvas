@@ -401,10 +401,20 @@ class MiriCanvas(Tk):
                     eleid, name = self.miriClass.getElementsID()
 
                     for index, ele in enumerate(eleid):
-                        try:
-                            arrHashtag = hashtagList(name[index])
-                        except:
-                            insertLog(self.logbox, f"Redis server not running")
+                        redis_break = 0
+                        for _ in range(5):
+                            try:
+                                arrHashtag, source = hashtagList(name[index])
+                                insertLog(self.logbox, f"keyword [{name[index].upper()}] success get from {source.upper()}")
+                                redis_break = 0
+                                break
+                            except:
+                                insertLog(self.logbox, f"error check from redis")
+                                sleep(1)
+                                redis_break += 1
+                        
+                        if redis_break > 0:
+                            insertLog(self.logbox, f"Connection Failed to Redis")
                             self.reStateofTkinter("enabled")
                             driver.quit()
                             return
@@ -432,13 +442,13 @@ class MiriCanvas(Tk):
 
                 return
 
-        self.reStateofTkinter("enabled")
-        insertLog(self.logbox, "All Done")
-
         if self.looping == 1:
 
             insertLog(self.logbox, f"Start Looping All Account")
             self.MainUpload()
+
+        self.reStateofTkinter("enabled")
+        insertLog(self.logbox, "All Done")
 
 if __name__ == "__main__":
     app = MiriCanvas()
