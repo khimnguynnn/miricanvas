@@ -5,7 +5,7 @@ __pycache__/
 Images/
 .DS_Store
 # C extensions
-config
+./config
 delete.py
 Uploaded
 *.so
