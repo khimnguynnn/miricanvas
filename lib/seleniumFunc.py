@@ -38,6 +38,7 @@ def openChrome(userLogin, passwordLogin, proxy, headless=None, cookie_result=Non
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     driver = webdriver.Chrome(options=options, service=chrome_service)
     driver.maximize_window()
+    sleep(3)
     driver.implicitly_wait(10)
     driver.get("https://designhub.miricanvas.com/login")
 
