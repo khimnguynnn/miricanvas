@@ -27,12 +27,16 @@ class MiriCanvas(Tk):
         # frame
         self.group = Frame(main, padx=5, pady=5)
         self.group.grid(row=0, column=0, padx=10, pady=10)
-
+        
+        # scrollbar treeview
+        self.treescroll = ttk.Scrollbar(self.group)
+        self.treescroll.pack(side=RIGHT, fill=Y)
+        
         # Treview
         s = ttk.Style()
         s.theme_use('clam')
         s.configure('Treeview.Heading', background="#0099CC")
-        self.tree = ttk.Treeview(self.group, show='headings', height=8)
+        self.tree = ttk.Treeview(self.group, show='headings', height=8, yscrollcommand=self.treescroll.set)
         self.tree.pack()
         self.tree["columns"] = ("email","password", "ip", "approve", "pending", "balance")
         self.tree.heading("email", text="Email")
@@ -47,7 +51,10 @@ class MiriCanvas(Tk):
         self.tree.column("pending", width=85, anchor='center')
         self.tree.heading("balance", text="Balance (USD)")
         self.tree.column("balance", width=100, anchor='center')
-
+        
+        # link scrollbar to treeview
+        self.treescroll.config(command=self.tree.yview)
+        
         # group control account
         self.group_func = LabelFrame(main, text="Main Control", padx=42, pady=5)
         self.group_func.grid(row=1, column=0, rowspan=2, columnspan=2)
@@ -267,6 +274,7 @@ class MiriCanvas(Tk):
         self.startButton["state"] = state
         self.checkbox["state"] = state
         self.entry_elements["state"] = state
+        self.checkbox["state"] = state
     
     def updateAccountInfo(self, item, cookie, email, prx):
 
@@ -338,7 +346,7 @@ class MiriCanvas(Tk):
                 insertLog(self.logbox, f"Account {email} get error --> skip {email} account") 
                 continue
             insertLog(self.logbox, f"Got Member ID for requesting {memId}") 
-            break_count = 0
+
             resetCounts = 0
             batch_size = 50
             if self.eleCounts < batch_size:
@@ -360,28 +368,14 @@ class MiriCanvas(Tk):
                     
                     try:
                         insertLog(self.logbox, f"Folder Selected {folderEle}")
-                        elements, hashtag = getItemsInFolder(folderEle)
+                        elements = getItemsInFolder(folderEle)
                         insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
                         if len(elements) < 2:
                             insertLog(self.logbox, f"No Elements Found in Folder --> Folder {folderEle} Removed")
                             RemoveEmptyFolder(folderEle)
                             continue
-                        if isHaveElements(folderEle, hashtag) != True:
-                            continue
-                        
-                        if hashtag is not None:
-                            insertLog(self.logbox, f"Found Hashtag in folder {folderEle} -- > {hashtag}")
+                        else:
                             break
-
-                        if break_count == 5:
-                            insertLog(self.logbox, f"Most Folder not have hashtag --> user need check")
-                            driver.quit()
-                            return
-                        
-                        if hashtag == None:
-                            break_count += 1
-                            insertLog(self.logbox, f"Folder Not Have Hashtag {folderEle} --> Skip")
-                            continue
 
                     except Exception as e:
                         insertLog(self.logbox, e)
@@ -407,8 +401,24 @@ class MiriCanvas(Tk):
                     eleid, name = self.miriClass.getElementsID()
 
                     for index, ele in enumerate(eleid):
-                        arrHashtag = hashtagList(name[index], folderEle, hashtag)
-
+                        redis_break = 0
+                        for _ in range(5):
+                            try:
+                                arrHashtag, source = hashtagList(name[index])
+                                insertLog(self.logbox, f"keyword [{name[index].upper()}] success get from {source.upper()}")
+                                redis_break = 0
+                                break
+                            except:
+                                insertLog(self.logbox, f"error check from redis")
+                                sleep(1)
+                                redis_break += 1
+                        
+                        if redis_break > 0:
+                            insertLog(self.logbox, f"Connection Failed to Redis")
+                            self.reStateofTkinter("enabled")
+                            driver.quit()
+                            return
+                        
                         if self.miriClass.submitItem(ele, name[index], arrHashtag):
                             resetCounts += 1
                             insertLog(self.logbox, f"Account {email} success upload element --> {name[index]}.svg")
@@ -432,13 +442,13 @@ class MiriCanvas(Tk):
 
                 return
 
-        self.reStateofTkinter("enabled")
-        insertLog(self.logbox, "All Done")
-
         if self.looping == 1:
 
             insertLog(self.logbox, f"Start Looping All Account")
-            self.MainUpload(self.eleCounts)
+            self.MainUpload()
+
+        self.reStateofTkinter("enabled")
+        insertLog(self.logbox, "All Done")
 
 if __name__ == "__main__":
     app = MiriCanvas()

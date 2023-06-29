@@ -19,12 +19,8 @@ def openChrome(userLogin, passwordLogin, proxy, headless=None, cookie_result=Non
 
     if proxy != "None":
 
-        proxy = proxy.split(":")
-        ip = proxy[0]
-        port = proxy[1]
-        ip_user = proxy[2]
-        ip_passw = proxy[3]
-        proxies_extension = proxies(ip_user, ip_passw, ip, port)
+    
+        proxies_extension = proxies(proxy)
         options.add_extension(proxies_extension)
 
     if headless is None:
@@ -42,6 +38,7 @@ def openChrome(userLogin, passwordLogin, proxy, headless=None, cookie_result=Non
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     driver = webdriver.Chrome(options=options, service=chrome_service)
     driver.maximize_window()
+    sleep(3)
     driver.implicitly_wait(10)
     driver.get("https://designhub.miricanvas.com/login")
 

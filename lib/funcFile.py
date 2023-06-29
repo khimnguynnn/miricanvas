@@ -5,6 +5,7 @@ import random
 from pathlib import Path
 import glob
 from requests import Session
+import redis
 
 ses = Session()
 ses.headers.update({
@@ -57,30 +58,19 @@ def getImageFolders():
 
 def getItemsInFolder(folder):
     svgFile = []
-    hashtag = None
+
     folder_path = Path(ImagesPath().replace("lib\\", "") + "\\" + folder)
     for item in folder_path.iterdir():
         if item.name.__contains__(".svg"):
             svgFile.append(item.name)
-        
-        elif item.name.__contains__(".txt"):
-            hashtag = item.name
+
         else:
             pass
-    return svgFile, hashtag
+    return svgFile
 
-def hashtagList(name, folder, filename):
-    name = name.lower()
-    p = Path(ImagesPath().replace("lib\\", "") + f"\\{folder}\\{filename}")
-    with open(p, "r") as f:
-        words = f.read().split(",")
-    name = requestWord(name)
-
-    hashtag = random.sample(words, k=20)
-    hashtag.insert(0, name)
-    hashtag = list(dict.fromkeys(hashtag))
-
-    return hashtag
+def hashtagList(name):
+    hashtag, source = getHashtag(name)
+    return hashtag, source
 
 
 def plusImages(folder, images):
@@ -103,10 +93,65 @@ def RemoveEmptyFolder(folder):
     file_path = Path(f"./Images/{folder}/")
     file_path.rmdir()
 
+def count_keywords(lst):
+    keyword_count = {}
+    for keyword in lst:
+        if keyword in keyword_count:
+            keyword_count[keyword] += 1
+        else:
+            keyword_count[keyword] = 1
+    return keyword_count
 
-def isHaveElements(folder, filename):
-    file_path = Path(f"./Images/{folder}/{filename}")
+def getHashtag(input_keyword):
+    r = redis.Redis(host='localhost', port=6379, db=0)
+    input_keyword = input_keyword.lower()
+    ses = Session()
 
-    return True if len(open(file_path).read()) > 5 else False
+    ses.headers.update({
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
+    })
 
-    
+    keyword_list = []
+    _From = ""
+    string_keywords = ""
+
+    if r.exists(input_keyword):
+        _From = "Redis"
+        value = (r.get(input_keyword)).decode()
+        for tag in value.split(","):
+            keyword_list.append(tag)
+            
+        r.close()
+        
+    else:
+        url = "https://api.imstocker.com/api/search/searchWorks"
+        data = {"query":{"text":input_keyword,"licenseType":None,"type":3,"hasModels":False,"microstock":None,"author":None,"exclude":None,"id_language":"1"},"options":{"offset":0,"count":30},"keyworder_session":None,"target":"site","id_language":"1","access_token":"4095:PmbMXqrVOzfugL9gb8ERF7w1lSekLqTKLBcG5QWFoKrBvkI6nxJpEER39HxLMxhxcb0smbbFTCg85m3483Sf0Axx"}
+        
+        resp = ses.post(url, json=data).json()
+        for i in (resp["res"]["list"]):
+            for j in (i["keywords"]):
+                keyword = j["title_keyword"]
+                keyword_list.append(keyword)
+
+        result = count_keywords(keyword_list)
+        sorted_result = sorted(result.items(), key=lambda x: x[1], reverse=True)
+        
+        counts = 0
+        keyword_list.clear()
+        for keyword, _ in sorted_result:
+            if counts == 24:
+                break
+            
+            keyword_list.append(keyword)
+            counts += 1
+
+        string_keywords = ",".join(i for i in keyword_list)
+
+        r.set(input_keyword, string_keywords)
+        _From = "Keyworder"
+        r.close()
+    keyword_list.insert(0, input_keyword)
+
+    keyword_list = list(dict.fromkeys(keyword_list))
+
+    return keyword_list, _From

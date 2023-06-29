@@ -5,6 +5,8 @@ __pycache__/
 Images/
 .DS_Store
 # C extensions
+./config
+delete.py
 Uploaded
 *.so
 miricanvasUpload.py
