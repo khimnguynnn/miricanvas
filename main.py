@@ -369,12 +369,13 @@ class MiriCanvas(Tk):
                     try:
                         insertLog(self.logbox, f"Folder Selected {folderEle}")
                         elements = getItemsInFolder(folderEle)
-                        insertLog(self.logbox, f"Checking Hashtag in folder {folderEle}")
+                        insertLog(self.logbox, f"Checking Element in folder {folderEle}")
                         if len(elements) < 2:
                             insertLog(self.logbox, f"No Elements Found in Folder --> Folder {folderEle} Removed")
                             RemoveEmptyFolder(folderEle)
                             continue
                         else:
+                            insertLog(self.logbox, f"Got {len(elements)} Elements in Folder {folderEle}")
                             break
 
                     except Exception as e:
@@ -413,7 +414,7 @@ class MiriCanvas(Tk):
                                 sleep(1)
                                 redis_break += 1
                         
-                        if redis_break > 0:
+                        if redis_break > 0: 
                             insertLog(self.logbox, f"Connection Failed to Redis")
                             self.reStateofTkinter("enabled")
                             driver.quit()
