@@ -14,30 +14,6 @@ ses.headers.update({
         "X-Requested-With": "XMLHttpRequest"
 })
 
-def requestWord(word):
-    if " " in  word:
-        return word
-    if len(word) < 6:
-        return word
-    data = {
-        "action": "checkers_api",
-        "content": word
-    }
-
-    resp = ses.post("https://writer.com/wp-admin/admin-ajax.php", data=data)
-
-    try:
-        if resp.status_code == 200:
-            result = resp.json()["data"]["issues"][0]["suggestions"][0].lower()
-            if result.replace(" ", "") == word:
-                return result
-            else:
-                return word
-
-    except:
-
-        return word
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 
 def ImagesPath():
