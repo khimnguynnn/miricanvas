@@ -347,109 +347,109 @@ class MiriCanvas(Tk):
                 continue
             insertLog(self.logbox, f"Got Member ID for requesting {memId}") 
 
-            resetCounts = 0
-            batch_size = 50
-            if self.eleCounts < batch_size:
+        #     resetCounts = 0
+        #     batch_size = 50
+        #     if self.eleCounts < batch_size:
 
-                batch_size = self.eleCounts
+        #         batch_size = self.eleCounts
             
-            for _ in range(0, self.eleCounts, batch_size):
+        #     for _ in range(0, self.eleCounts, batch_size):
 
-                while True:
+        #         while True:
 
-                    try:
-                        folderEle = random.choice(getImageFolders())
+        #             try:
+        #                 folderEle = random.choice(getImageFolders())
 
-                    except:
+        #             except:
 
-                        insertLog(self.logbox, f"Cannot Select Folder")
-                        driver.quit()
-                        return
+        #                 insertLog(self.logbox, f"Cannot Select Folder")
+        #                 driver.quit()
+        #                 return
                     
-                    try:
-                        insertLog(self.logbox, f"Folder Selected {folderEle}")
-                        elements = getItemsInFolder(folderEle)
-                        insertLog(self.logbox, f"Checking Element in folder {folderEle}")
-                        if len(elements) < 2:
-                            insertLog(self.logbox, f"No Elements Found in Folder --> Folder {folderEle} Removed")
-                            RemoveEmptyFolder(folderEle)
-                            continue
-                        else:
-                            insertLog(self.logbox, f"Got {len(elements)} Elements in Folder {folderEle}")
-                            break
+        #             try:
+        #                 insertLog(self.logbox, f"Folder Selected {folderEle}")
+        #                 elements = getItemsInFolder(folderEle)
+        #                 insertLog(self.logbox, f"Checking Element in folder {folderEle}")
+        #                 if len(elements) < 2:
+        #                     insertLog(self.logbox, f"No Elements Found in Folder --> Folder {folderEle} Removed")
+        #                     RemoveEmptyFolder(folderEle)
+        #                     continue
+        #                 else:
+        #                     insertLog(self.logbox, f"Got {len(elements)} Elements in Folder {folderEle}")
+        #                     break
 
-                    except Exception as e:
-                        insertLog(self.logbox, e)
-                        continue
+        #             except Exception as e:
+        #                 insertLog(self.logbox, e)
+        #                 continue
                     
-                insertLog(self.logbox, f"Redirect to Upload Dashboard")
-                if int(self.eleCounts) - resetCounts <= batch_size:
-                    batch_size = int(self.eleCounts) - resetCounts
-                driver.get("https://designhub.miricanvas.com/element/upload")
-                sleep(3)
-                eleToPlus = []
+        #         insertLog(self.logbox, f"Redirect to Upload Dashboard")
+        #         if int(self.eleCounts) - resetCounts <= batch_size:
+        #             batch_size = int(self.eleCounts) - resetCounts
+        #         driver.get("https://designhub.miricanvas.com/element/upload")
+        #         sleep(3)
+        #         eleToPlus = []
 
-                for j in range(0, batch_size):
-                    try:
-                        eleToPlus.append(elements[j])
-                    except:
-                        pass
+        #         for j in range(0, batch_size):
+        #             try:
+        #                 eleToPlus.append(elements[j])
+        #             except:
+        #                 pass
                 
-                string_Path = plusImages(folderEle, eleToPlus)
-                insertLog(self.logbox, f"Started Upload Pack {folderEle}")
+        #         string_Path = plusImages(folderEle, eleToPlus)
+        #         insertLog(self.logbox, f"Started Upload Pack {folderEle}")
 
-                if UploadtoMiris(driver, string_Path):
-                    eleid, name = self.miriClass.getElementsID()
+        #         if UploadtoMiris(driver, string_Path):
+        #             eleid, name = self.miriClass.getElementsID()
 
-                    for index, ele in enumerate(eleid):
-                        redis_break = 0
-                        for _ in range(5):
-                            try:
-                                arrHashtag, source = hashtagList(name[index])
-                                insertLog(self.logbox, f"keyword [{name[index].upper()}] success get from {source.upper()}")
-                                redis_break = 0
-                                break
-                            except:
-                                insertLog(self.logbox, f"error check from redis")
-                                sleep(1)
-                                redis_break += 1
+        #             for index, ele in enumerate(eleid):
+        #                 redis_break = 0
+        #                 for _ in range(5):
+        #                     try:
+        #                         arrHashtag, source = hashtagList(name[index])
+        #                         insertLog(self.logbox, f"keyword [{name[index].upper()}] success get from {source.upper()}")
+        #                         redis_break = 0
+        #                         break
+        #                     except:
+        #                         insertLog(self.logbox, f"error check from redis")
+        #                         sleep(1)
+        #                         redis_break += 1
                         
-                        if redis_break > 0: 
-                            insertLog(self.logbox, f"Connection Failed to Redis")
-                            self.reStateofTkinter("enabled")
-                            driver.quit()
-                            return
+        #                 if redis_break > 0: 
+        #                     insertLog(self.logbox, f"Connection Failed to Redis")
+        #                     self.reStateofTkinter("enabled")
+        #                     driver.quit()
+        #                     return
                         
-                        if self.miriClass.submitItem(ele, name[index], arrHashtag):
-                            resetCounts += 1
-                            insertLog(self.logbox, f"Account {email} success upload element --> {name[index]}.svg")
+        #                 if self.miriClass.submitItem(ele, name[index], arrHashtag):
+        #                     resetCounts += 1
+        #                     insertLog(self.logbox, f"Account {email} success upload element --> {name[index]}.svg")
 
-                        else:
-                            insertLog(self.logbox, f"Account {email} failed upload element --> {name[index]}.svg")
-                            self.miriClass.DeleteErrorElement(ele)
-                            insertLog(self.logbox, f"Success Delete Error Element --> {name[index]}.svg")
+        #                 else:
+        #                     insertLog(self.logbox, f"Account {email} failed upload element --> {name[index]}.svg")
+        #                     self.miriClass.DeleteErrorElement(ele)
+        #                     insertLog(self.logbox, f"Success Delete Error Element --> {name[index]}.svg")
                             
-                for ele in eleToPlus:
+        #         for ele in eleToPlus:
 
-                    DelImage(folderEle, ele)
+        #             DelImage(folderEle, ele)
 
-            self.updateAccountInfo(self.items[indexx], cookie, email, prx)
-            driver.quit()
+        #     self.updateAccountInfo(self.items[indexx], cookie, email, prx)
+        #     driver.quit()
 
-            if self.isStopped == True:
+        #     if self.isStopped == True:
                 
-                insertLog(self.logbox, f"Program Stopped at account {email}")
-                self.reStateofTkinter("enabled")
+        #         insertLog(self.logbox, f"Program Stopped at account {email}")
+        #         self.reStateofTkinter("enabled")
 
-                return
+        #         return
 
-        if self.looping == 1:
+        # if self.looping == 1:
 
-            insertLog(self.logbox, f"Start Looping All Account")
-            self.MainUpload()
+        #     insertLog(self.logbox, f"Start Looping All Account")
+        #     self.MainUpload()
 
-        self.reStateofTkinter("enabled")
-        insertLog(self.logbox, "All Done")
+        # self.reStateofTkinter("enabled")
+        # insertLog(self.logbox, "All Done")
 
 if __name__ == "__main__":
     app = MiriCanvas()
