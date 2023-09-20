@@ -374,7 +374,7 @@ class MiriCanvas(Tk):
                     except Exception as e:
                         insertLog(self.logbox, e)
                         continue
-       
+
                     
                 insertLog(self.logbox, f"Redirect to Upload Dashboard")
 
