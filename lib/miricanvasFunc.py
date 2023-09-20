@@ -20,8 +20,8 @@ class miricanvasFeature:
         self.BALANCE_URL = f"https://api-designhub.miricanvas.com/api/v1/accounting/achievement-summary?aggregateUnit=YEARLY&endDate=1704036399999&page=0&size=50&startDate=1672498800000&licenseKeys={self.memid}"
         # self.RATE_URL = "https://openexchangerates.org/api/latest.json?app_id=91c457aae2834f16b872d16a2201e088"
         self.RATE_URL = "https://www.currency.me.uk/charts-fetch.php?c1=USD&c2=KRW&t=1"
-        self.PENDING_URL = f"https://api-designhub.miricanvas.com/api/v1/element-items/get-element-integration-items?activeStatuses=WAITING&activeStatuses=ACTIVE&contentReviewItemStatuses=WAITING&contentReviewItemStatuses=RETRY&contentSubmissionStatuses=DONE&memberId={self.memid}&size=1"
-        self.ARPPROVED_URL = f"https://api-designhub.miricanvas.com/api/v1/element-items/get-element-integration-items?activeStatuses=WAITING&activeStatuses=ACTIVE&activeStatuses=HIDDEN&activeStatuses=INACTIVE&page=0&size=50&sort=contentReviewItem.approveDate%2CDESC&contentReviewItemStatuses=APPROVAL&contentSubmissionStatuses=DONE&endDate=1704036399999&licenseKey={self.memid}&startDate=1681578000000"
+        self.PENDING_URL = f"https://api-designhub.miricanvas.com/long-polling/v1/element-items/get-count?activeStatuses=ACTIVE&page=0&size=50&sort=contentReviewItem.submitDate%2CDESC&contentReviewItemStatuses=WAITING&contentReviewItemStatuses=RETRY&contentSubmissionStatuses=DONE&contentReviewItemSubmitDateEndDate=1695229199999&contentReviewItemSubmitDateStartDate=1669647600000&memberId={self.memid}&loadLatestData=true"
+        self.ARPPROVED_URL = f"https://api-designhub.miricanvas.com/long-polling/v1/element-items/get-count?activeStatuses=ACTIVE&activeStatuses=HIDDEN&activeStatuses=INACTIVE&page=0&size=50&sort=contentReviewItem.approveDate%2CDESC&contentReviewItemStatuses=APPROVAL&contentSubmissionStatuses=DONE&licenseKeys={self.memid}&contentReviewItemApproveDateStartDate=1681578000000&contentReviewItemApproveDateEndDate=1704036399999&loadLatestData=true"
 
         
     def session(self, cookie):
@@ -116,7 +116,7 @@ class miricanvasFeature:
     def PendingElements(self):
         try:
             resp = self.ses.get(self.PENDING_URL)
-            return resp.json()["data"]["pagination"]["totalCount"] if resp.status_code == 200 else None
+            return resp.json()["data"] if resp.status_code == 200 else None
         except:
             return None
 
@@ -124,7 +124,7 @@ class miricanvasFeature:
     def ApprovedElements(self):
         try:
             resp = self.ses.get(self.ARPPROVED_URL)
-            return resp.json()["data"]["pagination"]["totalCount"] if resp.status_code == 200 else None
+            return resp.json()["data"] if resp.status_code == 200 else None
         except:    
             return None
         
