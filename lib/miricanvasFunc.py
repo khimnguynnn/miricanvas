@@ -16,7 +16,7 @@ class miricanvasFeature:
         # function need run first
         self.memid = self.memberID()
         #CONST URL
-        self.ELEMENTID = f"https://api-designhub.miricanvas.com/api/v1/element-items/get-element-integration-items?activeStatuses=WAITING&activeStatuses=ACTIVE&activeStatuses=HIDDEN&activeStatuses=INACTIVE&page=0&size=100&sort=createDate%2CDESC&contentSubmissionStatuses=TO_BE_SUBMITTED&memberId={self.memid}"
+        self.ELEMENTID = f"https://api-designhub.miricanvas.com/api/v2/element-items/get-element-integration-items?activeStatuses=ACTIVE&activeStatuses=HIDDEN&activeStatuses=INACTIVE&page=0&size=50&sort=createDate%2CDESC&contentSubmissionStatuses=TO_BE_SUBMITTED&memberId={self.memid}"
         self.BALANCE_URL = f"https://api-designhub.miricanvas.com/api/v1/accounting/achievement-summary?aggregateUnit=YEARLY&endDate=1704036399999&page=0&size=50&startDate=1672498800000&licenseKeys={self.memid}"
         # self.RATE_URL = "https://openexchangerates.org/api/latest.json?app_id=91c457aae2834f16b872d16a2201e088"
         self.RATE_URL = "https://www.currency.me.uk/charts-fetch.php?c1=USD&c2=KRW&t=1"
@@ -59,7 +59,7 @@ class miricanvasFeature:
         name = []
         
         res = self.ses.get(self.ELEMENTID).json()
-        for i in res["data"]["content"]:
+        for i in res["data"]:
             try:
                 eleID.append(i["id"])
                 nameSplited = i["name"].split("-")
