@@ -1,7 +1,6 @@
 from datetime import datetime
 from pathlib import Path
 import os
-import random
 from pathlib import Path
 import glob
 from requests import Session
