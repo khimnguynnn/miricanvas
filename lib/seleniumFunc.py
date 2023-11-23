@@ -11,8 +11,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 def openChrome(userLogin, passwordLogin, proxy, headless=None, cookie_result=None):
     options = webdriver.ChromeOptions()
-    chrome_service = ChromeService(ChromeDriverManager().install())
-    chrome_service.creationflags = CREATE_NO_WINDOW
+    # chrome_service = ChromeService(ChromeDriverManager().install())
+    # chrome_service.creationflags = CREATE_NO_WINDOW
     prefs = {"credentials_enable_service": False,
             "profile.password_manager_enabled": False}
     options.add_experimental_option("prefs", prefs)
@@ -23,9 +23,9 @@ def openChrome(userLogin, passwordLogin, proxy, headless=None, cookie_result=Non
         proxies_extension = proxies(proxy)
         options.add_extension(proxies_extension)
 
-    if headless is None:
+    # if headless is None:
 
-        options.add_argument("--headless=new")
+    #     options.add_argument("--headless=new")
 
     options.add_argument("--disable-web-security")
     options.add_argument("--disable-site-isolation-trials")
@@ -36,7 +36,8 @@ def openChrome(userLogin, passwordLogin, proxy, headless=None, cookie_result=Non
     options.add_argument("--log-level=3")
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    driver = webdriver.Chrome(options=options, service=chrome_service)
+    # driver = webdriver.Chrome(options=options, service=chrome_service)
+    driver = webdriver.Chrome(options=options)
     driver.maximize_window()
     sleep(3)
     driver.implicitly_wait(10)

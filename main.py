@@ -68,11 +68,11 @@ class MiriCanvas(Tk):
         self.startButton.grid(row=0, column=3, pady=5, padx=5)
         self.stopButton = ttk.Button(self.group_func, text="Stop", command=self.StopProgram)
         self.stopButton.grid(row=0, column=4, pady=5, padx=5)
-        self.label_count = Label(self.group_func, text="Elements per Acc")
+        self.label_count = Label(self.group_func, text="Packs per Acc")
         self.label_count.grid(row=0, column=7, rowspan=2, sticky=N)
         self.entry_elements = ttk.Entry(self.group_func, width=14)
         self.entry_elements.grid(row=0, column=7, rowspan=2, sticky=S)
-        self.entry_elements.insert(0, 500)
+        self.entry_elements.insert(0, "10")
 
         self.openButton = ttk.Button(self.group_func, text="Open Profile", command=self.threadOpenProfile)
         self.openButton.grid(row=0, column=5, pady=5, padx=5)
@@ -345,16 +345,9 @@ class MiriCanvas(Tk):
             if handle_count == 5:
                 insertLog(self.logbox, f"Account {email} get error --> skip {email} account") 
                 continue
-            insertLog(self.logbox, f"Got Member ID for requesting {memId}") 
-
-            resetCounts = 0
-            batch_size = 50
-            if self.eleCounts < batch_size:
-
-                batch_size = self.eleCounts
             
-            for _ in range(0, self.eleCounts, batch_size):
-
+            insertLog(self.logbox, f"Got Member ID for requesting {memId}") 
+            for iii in range(0, self.eleCounts):
                 while True:
 
                     try:
@@ -381,22 +374,22 @@ class MiriCanvas(Tk):
                     except Exception as e:
                         insertLog(self.logbox, e)
                         continue
+
                     
                 insertLog(self.logbox, f"Redirect to Upload Dashboard")
-                if int(self.eleCounts) - resetCounts <= batch_size:
-                    batch_size = int(self.eleCounts) - resetCounts
+
                 driver.get("https://designhub.miricanvas.com/element/upload")
                 sleep(3)
                 eleToPlus = []
 
-                for j in range(0, batch_size):
+                for j in range(len(elements)):
                     try:
                         eleToPlus.append(elements[j])
                     except:
                         pass
                 
                 string_Path = plusImages(folderEle, eleToPlus)
-                insertLog(self.logbox, f"Started Upload Pack {folderEle}")
+                insertLog(self.logbox, f"Started Upload Pack {folderEle} pack {iii+1}/{self.eleCounts}")
 
                 if UploadtoMiris(driver, string_Path):
                     eleid, name = self.miriClass.getElementsID()
@@ -421,7 +414,7 @@ class MiriCanvas(Tk):
                             return
                         
                         if self.miriClass.submitItem(ele, name[index], arrHashtag):
-                            resetCounts += 1
+
                             insertLog(self.logbox, f"Account {email} success upload element --> {name[index]}.svg")
 
                         else:
